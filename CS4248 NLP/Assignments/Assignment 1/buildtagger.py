@@ -8,11 +8,6 @@ import json
 
 from collections import defaultdict, Counter
 
-# 1) Extract individual counts for tag bigram and tag word likelihoods in the training corpus.
-# 2) For the unknown words in the likelihood table, we change all words with single occurrence to UNK and use this for all unknwon words.
-# 3) The tag bigram is add one smoothed.
-# 4) Using the above, Viterbi is implemented on the HMM.
-
 
 def train_model(train_file, model_file):
     # Write your code here. You can add functions as well.

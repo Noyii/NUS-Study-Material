@@ -12,8 +12,7 @@ BACKPOINTER = "backpointer"
 
 
 def viterbi(observation, vocabulary, states, \
-initial_state_probability, emission_probability, transition_probability, \
-word_tag_frequency):
+initial_state_probability, emission_probability, transition_probability):
 
     distinct_tag_count = len(states)
     distinct_word_count = len(vocabulary)
@@ -83,13 +82,12 @@ def tag_sentence(test_file, model_file, out_file):
         initial_state_probability = json.loads(lines[2])
         transition_probability = json.loads(lines[3])
         emission_probability = json.loads(lines[4])
-        word_tag_frequency = json.loads(lines[5])
 
     print("Performing Viterbi algorithm")
     with open(test_file, 'r') as test:
         for line in test.readlines():
             observation = line.strip().split(" ")
-            output = viterbi(observation, vocabulary, states, initial_state_probability, emission_probability, transition_probability, word_tag_frequency)
+            output = viterbi(observation, vocabulary, states, initial_state_probability, emission_probability, transition_probability)
             result.append(output)
 
     print("Writing answer in out_file")
