@@ -74,21 +74,33 @@ def factor_marginalize(factor, var):
     """ YOUR CODE HERE
     Marginalize out the variables given in var
     """
+    # Creating a copy so that factor isn't modified by reference whenever out is modified
     out = copy.deepcopy(factor)
     
+    # Loop over every variable and marginalize one by one
     for marg_var in var:
         prev_factor = copy.deepcopy(out)
+        
+        # Remove the variable to be marginalized for the final set of variables
         out.var = np.setdiff1d(prev_factor.var, marg_var)
         
+        # Get the index of the variable to be marginalized
         marg_idx = np.where(prev_factor.var == marg_var)[0]
+
+        # Delete cardinality of marginalized variable
         out.card = np.delete(prev_factor.card, marg_idx)
         
         out.val = np.zeros(np.prod(out.card))
         final_assignments = out.get_all_assignments()
+
+        # Get all original assignments without the column for the marginalized variable  
         marg_assignments = np.delete(prev_factor.get_all_assignments(), marg_idx, axis=1)
         
         for i, e in enumerate(final_assignments):
+            # Get all indices where one row of final_assignment matches multiple rows of marg_assignments
             idx = np.where((marg_assignments == e).all(axis=1))[0]
+
+            # Sum the values of all matching rows in the original factor
             out.val[i] = np.sum(prev_factor.val[idx])    
 
     return out
@@ -113,13 +125,17 @@ def observe_evidence(factors, evidence=None):
     Set the probabilities of assignments which are inconsistent with the 
     evidence to zero.
     """
+
+    # Loop through the dictionary
     for observed, value in evidence.items():
+        # Loop through every factor
         for factor in out:
             idx = np.where(factor.var == observed)[0]
             
             if len(idx) != 0: # Random variable present in this factor
                 assignments = factor.get_all_assignments()
                 idx_to_modify = [j for j, row in enumerate(assignments) if row[idx] != value]
+                # Set probability to 0 for all rows where evidence is not present
                 factor.val[idx_to_modify] = 0
 
     return out
@@ -160,11 +176,13 @@ def factor_sum(A, B):
     """
     out.val = np.add(A.val[idxA], B.val[idxB])
 
+    # Calculate val_argmax here for convenience as this method is used in map_eliminate()
     if A.val_argmax is None:
         A.val_argmax = [{}] * np.prod(A.card)
     if B.val_argmax is None:
         B.val_argmax = [{}] * np.prod(B.card)
     
+    # Take union of individual val_argmax
     out.val_argmax = np.array([{**A.val_argmax[idxA[i]], **B.val_argmax[idxB[i]]} for i in range(len(out.val))])
     
     # To pass the test case, but in reality we need the union of argmax to avoid backtracking
@@ -217,11 +235,14 @@ def factor_max_marginalize(factor, var):
         
         for i, e in enumerate(final_assignments):
             idx = np.where((marg_assignments == e).all(axis=1))[0]
+            # Take max of all probabilites for selected indices
             out.val[i] = np.amax(prev_factor.val[idx])
 
+            # Loop through every assignment of selected indices
             for x in index_to_assignment(idx, prev_factor.card):
                 j = assignment_to_index(x, prev_factor.card)
 
+                # if value of an assignment equals final max prob, take a union with its val_argmax
                 if (prev_factor.val[j] == out.val[i]):
                     if prev_factor.val_argmax is None:
                         out.val_argmax[i] = {marg_var: x[marg_idx][0]}
@@ -332,12 +353,15 @@ def compute_marginals_bp(V, factors, evidence):
     Hint: You might find it useful to add auxilliary functions. You may add 
       them as either inner (nested) or external functions.
     """
+    # Will populate all messages of the kind messages[child][parent]
     for e in graph.neighbors(root):
         collect_messages(root, e, graph, messages)
-        
+
+    # Will populate all messages of the kind messages[parent][child]    
     for e in graph.neighbors(root):
         distribute_messages(root, e, graph, messages)
     
+    # Perform inference on each variable
     for inference_var in V:
         marginal = compute_marginal(graph, messages, inference_var)
         marginals.append(marginal)
@@ -346,14 +370,16 @@ def compute_marginals_bp(V, factors, evidence):
 
 
 def collect_messages(target, source, graph, messages, MAP=False):
+    # Collect messages recursively from child to parent
     nodes = neighbors_except_origin(graph, source, target)
     for k in nodes:
         collect_messages(source, k, graph, messages, MAP)
-  
+    
     send_message(source, target, graph, messages, MAP)
     
     
 def distribute_messages(source, target, graph, messages):
+    # Distribute messages recursively from parent to child
     send_message(source, target, graph, messages)
     
     nodes = neighbors_except_origin(graph, target, source)
@@ -366,21 +392,28 @@ def send_message(source, target, graph, messages, MAP=False):
     
     nodes = neighbors_except_origin(graph, source, target)
     for n in nodes:
+        # If a message already exists, use that
         if isinstance(messages[n][source], Factor):
             joint_factors.append(messages[n][source])
-            
+
+    # If unary potential exists, use that        
     if len(graph.nodes[source]) != 0:
         joint_factors.append(graph.nodes[source]['factor'])
     
+    # If pairwise potential exists, use that
     if graph.has_edge(source, target):
         joint_factors.append(graph.edges[source, target]['factor'])
 
     if not MAP:
         joint = compute_joint_distribution(joint_factors) 
+        
+        # Compute inference on target node
         nodes.append(source)
         messages[source][target] = factor_marginalize(joint, nodes)
     else:
         joint = compute_joint_distribution_in_log_space(joint_factors) 
+
+        # Compute inference on target node
         nodes.append(source)
         messages[source][target] = factor_max_marginalize(joint, nodes)
 
@@ -390,18 +423,26 @@ def compute_marginal(graph, messages, source, MAP=False):
     
     nodes = graph.neighbors(source)
     for n in nodes:
+        # Use all messages incoming into the source
         joint_factors.append(messages[n][source])
-        
+
+    # If unary potential exists, use that     
     if len(graph.nodes[source]) != 0:
         joint_factors.append(graph.nodes[source]['factor'])    
     
     if not MAP:
         joint = compute_joint_distribution(joint_factors)
+
+        # Compute inference on target node
         marg_vars = np.delete(joint.var, np.where(joint.var == source))
         output = factor_marginalize(joint, marg_vars)
+
+        # Normalize the probabilities
         output.val /= np.sum(joint.val)
     else:
         joint = compute_joint_distribution_in_log_space(joint_factors)
+
+        # Compute inference on target node
         marg_vars = np.delete(joint.var, np.where(joint.var == source))
         output = factor_max_marginalize(joint, marg_vars)
     
@@ -451,6 +492,7 @@ def map_eliminate(factors, evidence):
     """
 
     factors = observe_evidence(factors, evidence)
+    # Change probabilities into log-space
     factors = [to_log(f) for f in factors]
     
     graph = generate_graph_from_factors(factors)
@@ -460,17 +502,22 @@ def map_eliminate(factors, evidence):
     num_nodes = graph.number_of_nodes()
     messages = [[None] * num_nodes for _ in range(num_nodes)]
 
+    # Collect all messages from [child][parent]
     for e in graph.neighbors(root):
         collect_messages(root, e, graph, messages, MAP=True)
 
+    # Perform inference on the root node
     marginal = compute_marginal(graph, messages, root, MAP=True)
+    
+    # Get maximum probability value
     log_prob_max = np.amax(marginal.val)
     
     map_idx = np.argmax(marginal.val)
     max_decoding = marginal.val_argmax[map_idx]
+    # Add configuration for root node
     max_decoding[root] = map_idx
 
-    # remove evidence key
+    # remove evidence key from the configuration
     for e in evidence:
         if e in max_decoding:
             del max_decoding[e]
