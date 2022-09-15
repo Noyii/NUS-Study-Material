@@ -1,5 +1,6 @@
 # python3.8 buildtagger.py <train_file_absolute_path> <model_file_absolute_path>
 
+from ast import Return
 import os
 import math
 import sys
@@ -67,6 +68,9 @@ def train_model(train_file, model_file):
         for tag, value in tags.items():
             emission_probability[tag][word] += value
     
+    print(sum(word_tag_frequency[UNKNOWN].values()))
+    return
+    
     # Calculate all probabilities
     distinct_tag_count = len(states) # 45 for Penn TreeBank
     distinct_word_count = len(vocabulary)
@@ -85,6 +89,9 @@ def train_model(train_file, model_file):
             word_emission_counter[word] = math.log((word_emission_counter[word] + 1*K) / (total + len(word_emission_counter)*K))
         
     emission_probability['RDM'] = {'RDM': math.log(1.0)}
+
+    # print(emission_probability)
+    # return
 
     with open(model_file, 'w') as model:
         print("Writing vocabulary")

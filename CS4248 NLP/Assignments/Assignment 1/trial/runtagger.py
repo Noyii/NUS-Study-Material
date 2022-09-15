@@ -10,22 +10,25 @@ import json
 PROBABILITY = "probability"
 BACKPOINTER = "backpointer"
 UNKNOWN = "UNK"
+K = 1
 
 
 def viterbi(observation, vocabulary, states, \
 initial_state_probability, emission_probability, transition_probability):
 
     distinct_tag_count = len(states)
+    # print(distinct_tag_count)
     distinct_word_count = len(vocabulary)
 
-    unknown_word_prob = math.log(1/distinct_word_count)
-    unknown_state_prob = math.log(1/distinct_tag_count)
+    unknown_word_prob = math.log(1/(distinct_word_count**5))
+    unknown_state_prob = math.log(1/(K*distinct_tag_count))
     # print(unknown_word_prob)
     # return
     
     V = [{}]
 
     for state in states:
+        # print(emission_probability[state].get(UNKNOWN, unknown_word_prob))
         unknown_emission = emission_probability[state].get(UNKNOWN, unknown_word_prob)
         
         V[0][state] = {
@@ -50,7 +53,8 @@ initial_state_probability, emission_probability, transition_probability):
             for prev_state in states:
                 transition_prob = V[t-1][prev_state][PROBABILITY] + transition_probability[prev_state].get(state, unknown_state_prob)
                 if (max_transition_prob == transition_prob):
-                        V[t][state] = {PROBABILITY: max_emission_prob, BACKPOINTER: prev_state}
+                    print(prev_state)
+                    V[t][state] = {PROBABILITY: max_emission_prob, BACKPOINTER: prev_state}
 
     pre_tag = "RDM"
     output = ""
