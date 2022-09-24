@@ -220,19 +220,24 @@ def _get_node_marginal_probabilities(query_nodes, cliques, clique_potentials):
 
     """ YOUR CODE HERE """
     import copy 
+    from cmath import inf
 
     query_marginal_probabilities = [Factor() for _ in query_nodes]
 
-    for i in range(len(cliques)):
-        clique = cliques[i]
-        clique_potential = clique_potentials[i]
+    for i, var in enumerate(query_nodes):
+        min_card = inf
+        clique_potential = Factor()
 
-        for var in clique:
-            p = copy.deepcopy(clique_potential)
-            p.val = p.val / np.sum(p.val) # normalize
+        for j in range(len(cliques)):
+            if (var in cliques[j]) & (clique_potentials[j].card < min_card).any():
+                min_card = clique_potentials[j].card
+                clique_potential = clique_potentials[j]
 
-            idx = np.where(query_nodes == var)[0][0]
-            query_marginal_probabilities[idx] = factor_marginalize(p, list(set(p.var) - set([var])))
+        p = copy.deepcopy(clique_potential)
+        p.val = p.val / np.sum(p.val) # normalize
+
+        marginalize_vars = list(set(p.var) - set([var]))
+        query_marginal_probabilities[i] = factor_marginalize(p, marginalize_vars)
     """ END YOUR CODE HERE """
 
     return query_marginal_probabilities
