@@ -6,6 +6,13 @@ from factor_utils import factor_product
 
 
 """ ADD HELPER FUNCTIONS HERE (IF NEEDED) """
+import matplotlib.pyplot as plt
+
+def visualize_graph(graph):
+    nx.draw_networkx(graph, with_labels=True, font_weight='bold',
+                     node_size=1000, arrowsize=20)
+    plt.axis('off')
+    plt.show()
 
 """ END ADD HELPER FUNCTIONS HERE """
 

@@ -160,7 +160,7 @@ def _update_mrf_w_evidence(all_nodes, evidence, edges, factors):
             updated_factors.append(factor)
 
     evidence_vars = list(evidence.keys())
-    idx = np.where(query_nodes == evidence)
+    idx = np.where(query_nodes == evidence_vars)[0]
     query_nodes = np.delete(query_nodes, idx)
     
     updated_edges = []
@@ -229,8 +229,8 @@ def _get_node_marginal_probabilities(query_nodes, cliques, clique_potentials):
         clique_potential = Factor()
 
         for j in range(len(cliques)):
-            if (var in cliques[j]) & (clique_potentials[j].card < min_card).any():
-                min_card = clique_potentials[j].card
+            if var in cliques[j] and len(clique_potentials[j].var) < min_card:
+                min_card = len(clique_potentials[j].var)
                 clique_potential = clique_potentials[j]
 
         p = copy.deepcopy(clique_potential)
