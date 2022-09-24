@@ -1,9 +1,9 @@
 """ CS5340 Lab 2 Part 1: Junction Tree Algorithm
 See accompanying PDF for instructions.
 
-Name: <Your Name here>
-Email: <username>@u.nus.edu
-Student ID: A0123456X
+Name: Niharika Shrivastava
+Email: e0954756@u.nus.edu
+Student ID: A0254355A
 """
 
 import os
@@ -113,13 +113,15 @@ def compute_marginal(graph, messages, source, cliques):
     # If unary potential exists, use that     
     if len(graph.nodes[source]) != 0:
         joint_factors.append(graph.nodes[source]['factor'])    
-    
+
     joint = compute_joint_distribution(joint_factors)
 
     # Compute inference on target node
     marginalized_vars = np.array(list(set(joint.var) - set(cliques[source])))
-    output = factor_marginalize(joint, marginalized_vars)
-    return output
+    if len(marginalized_vars) > 0:
+        return factor_marginalize(joint, marginalized_vars)
+    
+    return joint
 
 
 def neighbors_except_origin(graph, source, origin):
@@ -195,7 +197,6 @@ def _get_clique_potentials(jt_cliques, jt_edges, jt_clique_factors):
         G.add_edge(edge[0], edge[1])
 
     clique_potentials = _sum_product(G, jt_cliques)
-    print(clique_potentials)
     """ END YOUR CODE HERE """
 
     assert len(clique_potentials) == len(jt_cliques)
@@ -218,10 +219,20 @@ def _get_node_marginal_probabilities(query_nodes, cliques, clique_potentials):
     query_marginal_probabilities = []
 
     """ YOUR CODE HERE """
+    import copy 
 
-    # Normalize the probabilities
-    # output.val /= np.sum(joint.val)
+    query_marginal_probabilities = [Factor() for _ in query_nodes]
 
+    for i in range(len(cliques)):
+        clique = cliques[i]
+        clique_potential = clique_potentials[i]
+
+        for var in clique:
+            p = copy.deepcopy(clique_potential)
+            p.val = p.val / np.sum(p.val) # normalize
+
+            idx = np.where(query_nodes == var)[0][0]
+            query_marginal_probabilities[idx] = factor_marginalize(p, list(set(p.var) - set([var])))
     """ END YOUR CODE HERE """
 
     return query_marginal_probabilities
