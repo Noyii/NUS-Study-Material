@@ -32,12 +32,11 @@ def visualize_graph(graph):
     plt.show()
 
 
-def _sum_product(graph, cliques):
-    root = 0
-
+def _sum_product(graph, cliques, root):
     # Create structure to hold messages
-    num_nodes = graph.number_of_nodes()
-    messages = [[None] * num_nodes for _ in range(num_nodes)]
+    nodes = list(graph.nodes())
+    # num_nodes = graph.number_of_nodes()
+    messages = [[None] * len(nodes) for _ in range(len(nodes))]
 
     # Will populate all messages of the kind messages[child][parent]
     for e in graph.neighbors(root):
@@ -49,7 +48,7 @@ def _sum_product(graph, cliques):
     
     marginals = []
     # Perform inference on each variable
-    for inference_var in range(num_nodes):
+    for inference_var in nodes:
         marginal = compute_marginal(graph, messages, inference_var, cliques)
         marginals.append(marginal)
 
@@ -160,8 +159,9 @@ def _update_mrf_w_evidence(all_nodes, evidence, edges, factors):
             updated_factors.append(factor)
 
     evidence_vars = list(evidence.keys())
-    idx = np.where(query_nodes == evidence_vars)[0]
-    query_nodes = np.delete(query_nodes, idx)
+    for e in evidence_vars:
+        idx = np.where(query_nodes == e)[0]
+        query_nodes = np.delete(query_nodes, idx)
     
     updated_edges = []
     for e in edges:
@@ -196,7 +196,11 @@ def _get_clique_potentials(jt_cliques, jt_edges, jt_clique_factors):
     for edge in jt_edges:
         G.add_edge(edge[0], edge[1])
 
-    clique_potentials = _sum_product(G, jt_cliques)
+    clique_potentials = []
+    graphs = [G.subgraph(c) for c in nx.connected_components(G)]
+    for graph in graphs:
+        cp = _sum_product(graph, jt_cliques, root=list(graph.nodes())[0])
+        clique_potentials.extend(cp)
     """ END YOUR CODE HERE """
 
     assert len(clique_potentials) == len(jt_cliques)
