@@ -32,6 +32,101 @@ def visualize_graph(graph):
     plt.show()
 
 
+def _sum_product(graph, cliques):
+    root = 0
+
+    # Create structure to hold messages
+    num_nodes = graph.number_of_nodes()
+    messages = [[None] * num_nodes for _ in range(num_nodes)]
+
+    # Will populate all messages of the kind messages[child][parent]
+    for e in graph.neighbors(root):
+        collect_messages(root, e, graph, messages, cliques)
+
+    # Will populate all messages of the kind messages[parent][child]    
+    for e in graph.neighbors(root):
+        distribute_messages(root, e, graph, messages, cliques)
+    
+    marginals = []
+    # Perform inference on each variable
+    for inference_var in range(num_nodes):
+        marginal = compute_marginal(graph, messages, inference_var, cliques)
+        marginals.append(marginal)
+
+    return marginals
+
+
+def collect_messages(target, source, graph, messages, jt_cliques):
+    # Collect messages recursively from child to parent
+    nodes = neighbors_except_origin(graph, source, target)
+    for k in nodes:
+        collect_messages(source, k, graph, messages, jt_cliques)
+    
+    send_message(source, target, graph, messages, jt_cliques)
+
+
+def distribute_messages(source, target, graph, messages, jt_cliques):
+    # Distribute messages recursively from parent to child
+    send_message(source, target, graph, messages, jt_cliques)
+    
+    nodes = neighbors_except_origin(graph, target, source)
+    for k in nodes:
+        distribute_messages(target, k, graph, messages, jt_cliques)
+
+
+def compute_joint_distribution(factors):
+    joint = Factor()
+    for i in range(len(factors)):
+        joint = factor_product(joint, factors[i])
+
+    return joint
+
+        
+def send_message(source, target, graph, messages, jt_cliques):
+    joint_factors = []
+    
+    nodes = neighbors_except_origin(graph, source, target)
+    for n in nodes:
+        # If a message already exists, use that
+        if isinstance(messages[n][source], Factor):
+            joint_factors.append(messages[n][source])
+
+    # If unary potential exists, use that        
+    if len(graph.nodes[source]) != 0:
+        joint_factors.append(graph.nodes[source]['factor'])
+    
+    joint = compute_joint_distribution(joint_factors) 
+    
+    # Compute inference on target node
+    marginalized_vars = np.array(list(set(joint.var) - set(jt_cliques[target])))
+    messages[source][target] = factor_marginalize(joint, marginalized_vars)
+    
+
+def compute_marginal(graph, messages, source, cliques):
+    joint_factors = []
+    
+    nodes = graph.neighbors(source)
+    for n in nodes:
+        # Use all messages incoming into the source
+        joint_factors.append(messages[n][source])
+
+    # If unary potential exists, use that     
+    if len(graph.nodes[source]) != 0:
+        joint_factors.append(graph.nodes[source]['factor'])    
+    
+    joint = compute_joint_distribution(joint_factors)
+
+    # Compute inference on target node
+    marginalized_vars = np.array(list(set(joint.var) - set(cliques[source])))
+    output = factor_marginalize(joint, marginalized_vars)
+    return output
+
+
+def neighbors_except_origin(graph, source, origin):
+    nodes = list(graph.neighbors(source))
+    nodes.remove(origin)
+    return nodes
+
 """ END HELPER FUNCTIONS HERE """
 
 
@@ -95,11 +190,12 @@ def _get_clique_potentials(jt_cliques, jt_edges, jt_clique_factors):
     """ YOUR CODE HERE """
     G = nx.Graph()
     for i in range(len(jt_cliques)):
-        G.add_node(i)
+        G.add_node(i, factor=jt_clique_factors[i])
     for edge in jt_edges:
         G.add_edge(edge[0], edge[1])
 
-    
+    clique_potentials = _sum_product(G, jt_cliques)
+    print(clique_potentials)
     """ END YOUR CODE HERE """
 
     assert len(clique_potentials) == len(jt_cliques)
@@ -122,6 +218,9 @@ def _get_node_marginal_probabilities(query_nodes, cliques, clique_potentials):
     query_marginal_probabilities = []
 
     """ YOUR CODE HERE """
+
+    # Normalize the probabilities
+    # output.val /= np.sum(joint.val)
 
     """ END YOUR CODE HERE """
 
