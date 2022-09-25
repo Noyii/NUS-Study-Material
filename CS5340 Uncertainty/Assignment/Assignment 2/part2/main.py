@@ -1,9 +1,9 @@
 """ CS5340 Lab 2 Part 2: Parameter Learning
 See accompanying PDF for instructions.
 
-Name: <Your Name here>
-Email: <username>@u.nus.edu
-Student ID: A0123456X
+Name: Niharika Shrivastava
+Email: e0954756@u.nus.edu
+Student ID: A0254355A
 """
 
 import os
@@ -41,7 +41,12 @@ def _learn_node_parameter_w(outputs, inputs=None):
     weights = np.zeros(shape=num_inputs + 1)
 
     """ YOUR CODE HERE """
+    modified_inputs = np.insert(inputs, 0, 1, axis=1) # N * (I+1)
 
+    A = np.matmul(modified_inputs.T, modified_inputs) # (I+1) * (I+1)
+    B = np.matmul(outputs, modified_inputs) # 1 * (I+1)
+    weights = np.linalg.solve(A, B.T)
+    weights = weights.T # 1 * (I+1)
     """ END YOUR CODE HERE """
 
     return weights
@@ -62,7 +67,11 @@ def _learn_node_parameter_var(outputs, weights, inputs):
     var = 0.
 
     """ YOUR CODE HERE """
+    N = outputs.size
+    modified_inputs = np.insert(inputs, 0, 1, axis=1)
+    delta = np.matmul(weights, modified_inputs.T)
 
+    var = np.sum(np.square(outputs - delta)) / N
     """ END YOUR CODE HERE """
 
     return var
@@ -97,7 +106,33 @@ def _get_learned_parameters(nodes, edges, observations):
     parameters = {}
 
     """ YOUR CODE HERE """
+    G = nx.DiGraph()
+    for n in nodes:
+        G.add_node(n)
+    for e in edges:
+        G.add_edge(e[0], e[1])
 
+    for node in nodes:
+        outputs = np.array(observations[node]).reshape(1, -1)
+
+        parents = list(G.predecessors(node))
+        inputs = np.array([observations[parent] for parent in parents]).T
+        if inputs.size == 0:
+            N = len(outputs.T)
+            inputs = inputs.reshape((N, 0))
+        
+        weights = _learn_node_parameter_w(outputs, inputs)
+        variance = _learn_node_parameter_var(outputs, weights, inputs)
+
+        weights = weights.reshape((weights.T.size, ))
+        parameter = {
+            'bias': weights[0], 
+            'variance': variance
+        }
+        for i, parent in enumerate(parents):
+            parameter[parent] = weights[i+1]
+
+        parameters[node] = parameter
     """ END YOUR CODE HERE """
 
     return parameters
