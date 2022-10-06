@@ -80,16 +80,33 @@ def question9(x):
     Given a 3-D tensor x (b, n, m), calculate the mean along the n dimension without accounting for the 0-values.
     DO NOT use loop, list comprehension, or any other similar operations.
     """
+    batch, _, m = x.size()
+    output = []
+    
+    for b in range(batch):
+        result = []
+        for t in x[b]:
+            for j in range(m-1, -1, -1):
+                if t[j] != 0:
+                    break
+            result.append(t.sum()/(j+1))
+        
+        output.append(result)
 
-    return None
+    return torch.tensor(output)
 
 
 def question10(pairs):
     """
     Define a funtion that calculates the Euclidean distance of each vector pair.
     """
+    output = []
 
-    return None
+    for pair in pairs:
+        squares = [(p1 - p2)**2 for p1, p2 in zip(pair[0], pair[1])]
+        output.append(sum(squares)**0.5)
+
+    return torch.tensor(output)
 
 #TODO: fix the examples
 def main():
@@ -139,10 +156,10 @@ def main():
     q9 = question9(q9_input)
     print('Q9 example output: \n{}\n'.format(q9))
 
-    # q10_input = [([1, 1, 1], [2, 2, 2]), ([1, 2, 3], [3, 2, 1]), ([0.1, 0.2, 0.3], [0.33, 0.25, 0.1])]
-    # print('Q10 Example input: \n{}\n'.format(q10_input))
-    # q10 = question10(q10_input)
-    # print('Q10 example output: \n{}\n'.format(q10))
+    q10_input = [([1, 1, 1], [2, 2, 2]), ([1, 2, 3], [3, 2, 1]), ([0.1, 0.2, 0.3], [0.33, 0.25, 0.1])]
+    print('Q10 Example input: \n{}\n'.format(q10_input))
+    q10 = question10(q10_input)
+    print('Q10 example output: \n{}\n'.format(q10))
 
     print('\n==== A2 Part 1 Done ====')
 
