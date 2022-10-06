@@ -19,8 +19,11 @@ def question3(a, b):
     """
     Define a function to compute 3*a+2*b
     """
+    # 3*a
     lhs = torch.mul(a, 3)
+    # 2*b
     rhs = torch.mul(b, 2)
+    # 3a+2b
     return torch.add(lhs, rhs)
 
 
@@ -43,13 +46,17 @@ def question6(data):
     """
     Define a function to combine a list of 1-D tensors with different lengths into a new tensor by padding the shorter tensors with 0 on the left side
     """
+    # Get the maximum size of all the tensors in the list
     max_size = -1
     for t in data:
         s = list(t.size())[0]
         if s > max_size:
             max_size = s
 
+    # Initialize each tensor of max_length with 0 padding
     padding = [torch.zeros(max_size, dtype=torch.long) for _ in data]
+
+    # Add original tensors to the right to retain padding on the left
     for i, t in enumerate(data):
         padding[i][-len(t):] = t
 
@@ -58,10 +65,13 @@ def question6(data):
 
 def question7(y, w, b):
     """
-    Define a function that calculates w*(y - b)
+    Define a function that calculates w^T*(y - b)
     """
+    # y-b
     rhs = torch.sub(y, b)
+    # w^T
     w_t = torch.transpose(w, 0, 1)
+    # w^T(y-b)
     return torch.matmul(w_t, rhs)
 
 
@@ -72,6 +82,7 @@ def question8(y, w, b):
     """
     rhs = torch.sub(y, b)
     w_t = torch.transpose(w, 1, 2)
+    # bmm does it batch-wise
     return torch.bmm(w_t, rhs)
 
 
@@ -86,9 +97,13 @@ def question9(x):
     for b in range(batch):
         result = []
         for t in x[b]:
+            # Loop over every tensor backwards
             for j in range(m-1, -1, -1):
+                # If the element is not 0, padding is over. Break.
                 if t[j] != 0:
                     break
+            
+            # Get the sum of all elements in the tensor divided by non-padded counts
             result.append(t.sum()/(j+1))
         
         output.append(result)
