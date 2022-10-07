@@ -5,6 +5,8 @@ import string
 import argparse
 import datetime
 
+from collections import Counter
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -29,8 +31,48 @@ class LangDataset(Dataset):
             vocab (string): Path to the vocabulary file.
             text_file (string): Path to the text file.
         """
-        self.texts = None
-        self.labels = None
+        def __file_to_list(file_path):
+            with open(file_path) as data:
+                output = []
+                for line in data:
+                    output.append(line.rstrip())
+
+            return output
+
+        self.texts = __file_to_list(text_path)
+        if label_path is not None:
+            self.labels = __file_to_list(label_path)
+
+        if vocab is not None:
+            self.vocab = vocab
+        else:
+            self.vocab = dict()
+            count = 0
+            self.bigram_matrix = []
+
+            for text in self.texts:
+                characters = ['$'] + [c for c in text] + ['$']
+                bigram_list = []
+                
+                for i in range(len(characters)-1):
+                    bigram = characters[i] + characters[i+1]
+                    bigram_list.append(bigram)
+
+                    if bigram not in self.vocab.keys():
+                        self.vocab[bigram] = count
+                        count += 1
+
+                self.bigram_matrix.append(bigram_list)
+        
+        self.embedding_matrix = []
+        for i, bigrams in enumerate(self.bigram_matrix):
+            feature = []
+            counter = Counter(bigrams)
+            for key in self.vocab.keys():
+                feature.append(counter[key])
+            
+            self.embedding_matrix.append(feature)
+
 
     def vocab_size(self):
         """
@@ -38,15 +80,19 @@ class LangDataset(Dataset):
             num_vocab: size of the vocabulary
             num_class: number of class labels
         """
-        num_vocab = None
-        num_class = None
+        num_vocab = self.vocab.__len__()
+        classes = Counter(self.labels)
+        num_class = classes.__len__()
+
         return num_vocab, num_class
-    
+
+
     def __len__(self):
         """
         Return the number of instances in the data
         """
-        return None
+        return len(self)
+
 
     def __getitem__(self, i):
         """
@@ -56,8 +102,24 @@ class LangDataset(Dataset):
 
         DO NOT pad the tensor here, do it at the collator function.
         """
-        text = None
-        label = None
+        label = self.labels[i]
+        compact_embeddings = list(zip(*self.embedding_matrix))
+        bigrams = self.bigram_matrix[i]
+        feature = []
+
+        for bigram in bigrams:
+            x = compact_embeddings[self.vocab[bigram]]
+            feature.append(x)
+
+        h = []
+        d = len(feature[0])
+        compact_feature = list(zip(*feature))
+
+        for j in range(d):
+            average = sum(compact_feature[j]) / len(bigrams)
+            h.append(average)
+        
+        text = h
         
         return text, label
 
@@ -71,11 +133,23 @@ class Model(nn.Module):
     def __init__(self, num_vocab, num_class, dropout=0.3):
         super().__init__()
         # define your model here
+        self.vocab_size = num_vocab
+
+        self.embedding = nn.Linear(16, 200)
+        self.out = nn.Linear(200, num_class)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         # define the forward function here
+        out = self.embedding(x)
+        h1 = self.relu(out)
+        out = self.dropout(h1)
+        h2 = self.out(out)
 
-        return 
+        output = torch.softmax(h2)
+
+        return output
 
 
 def collator(batch):
@@ -101,8 +175,8 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
     data_loader = DataLoader(dataset, batch_size=batch_size, collate_fn=collator, shuffle=True)
 
     # assign these variables
-    criterion = None
-    optimizer = None
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
 
     start = datetime.datetime.now()
     for epoch in range(num_epoch):
@@ -114,16 +188,22 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             labels = data[1].to(device)
 
             # zero the parameter gradients
+            optimizer.zero_grad()
 
             # do forward propagation
+            predicted_labels = model.forward(texts)
 
             # do loss calculation
+            loss = criterion(predicted_labels, labels)
 
             # do backward propagation
+            loss.backward()
 
             # do parameter optimization step
+            optimizer.step()
 
             # calculate running loss value for non padding
+            running_loss = loss-padd
 
             # print loss value every 100 steps and reset the running loss
             if step % 100 == 99:
@@ -163,6 +243,7 @@ def main(args):
     device = torch.device(device_str)
     
     assert args.train or args.test, "Please specify --train or --test"
+    
     if args.train:
         assert args.label_path is not None, "Please provide the labels for training using --label_path argument"
         dataset = LangDataset(args.text_path, args.label_path)
@@ -175,6 +256,7 @@ def main(args):
         num_epochs = None
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
+    
     if args.test:
         assert args.model_path is not None, "Please provide the model to test using --model_path argument"
         
