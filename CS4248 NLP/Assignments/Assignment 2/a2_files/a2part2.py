@@ -35,18 +35,21 @@ class LangDataset(Dataset):
 
             return output
 
+        label_dict = {'eng': 0, 'deu': 1, 'fra': 2, 'ita': 3, 'spa': 4}
+        self.labels = []
         if label_path is not None:
-            label_dict = {'eng': 0, 'deu': 1, 'fra': 2, 'ita': 3, 'spa': 4}
             labels = __file_to_list(label_path)
-            self.labels = []
-            
             for label in labels:
                 self.labels.append(label_dict[label])
 
+        if vocab is not None:
+            self.vocab = vocab
+
         data = __file_to_list(text_path)
         self.texts = []
-        self.vocab = dict()
-        count = 1
+        if vocab is None:
+            self.vocab = {'unk': 1}
+            count = 2
 
         for text in data:
             characters = ['$'] + [c for c in text] + ['$']
@@ -56,14 +59,11 @@ class LangDataset(Dataset):
                 bigram = characters[i] + characters[i+1]
                 bigram_list.append(bigram)
 
-                if bigram not in self.vocab.keys():
+                if vocab is None and bigram not in self.vocab.keys():
                     self.vocab[bigram] = count
                     count += 1
 
             self.texts.append(bigram_list)
-        
-        if vocab is not None:
-            self.vocab = vocab
 
 
     def vocab_size(self):
@@ -74,6 +74,9 @@ class LangDataset(Dataset):
         """
         num_vocab = len(self.vocab)
         num_class = len(Counter(self.labels))
+
+        if num_class == 0:
+            num_class = 5
 
         return num_vocab, num_class
 
@@ -93,14 +96,18 @@ class LangDataset(Dataset):
 
         DO NOT pad the tensor here, do it at the collator function.
         """
-        label = self.labels[i]
-
         bigrams = self.texts[i]
         text = []
         for bigram in bigrams:
-            text.append(self.vocab[bigram])
+            if bigram in self.vocab.keys():
+                text.append(self.vocab[bigram])
+            else:
+                text.append(self.vocab['unk'])
+
+        if len(self.labels) == 0:
+            return text
         
-        return text, label
+        return text, self.labels[i]
 
 
 class Model(nn.Module):
@@ -114,27 +121,29 @@ class Model(nn.Module):
         # define your model here
         self.vocab_size = num_vocab
 
-        self.embedding = nn.Linear(16, 200)
+        self.embedding = nn.Linear(20, 200)
         self.out = nn.Linear(200, num_class)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
         # define the forward function here
         data = self.__embed_input(x)
-        h1 = nn.ReLU(self.embedding(data))
-        regularized_h1 = self.dropout(h1)
-        out = self.out(regularized_h1)
-        output = nn.Softmax(out)
+        h1 = self.dropout(self.embedding(data))
 
+        activated_h1 = F.relu(h1)
+        out = self.out(activated_h1)
+
+        output = F.softmax(out, dim=1)
         return output
 
     def __embed_input(self, x):
         d = len(x)
-        embedding_matrix = [[0] * (self.vocab_size)] * d
         input_data = x.tolist()
+        embedding_matrix = [[0 for _ in range(self.vocab_size)] for _ in range(d)]
 
         for i, bigrams in enumerate(input_data):
             count_of_each_bigram = Counter(bigrams)
+            
             for bigram, count in count_of_each_bigram.items():
                 if bigram != 0: # If not padding
                     embedding_matrix[i][bigram-1] = count
@@ -146,11 +155,13 @@ class Model(nn.Module):
             for bigram in bigrams:
                 if bigram == 0: # ignore padding in average
                     break
-                feature.append(compact_embeddings[bigram-1]) # k * d
+                
+                feature.append(list(compact_embeddings[bigram-1])) # k * d
 
             compact_feature = list(zip(*feature))
             k = len(feature)
             averaged_feature = []
+
             for i in range(d):
                 average = sum(compact_feature[i]) / k
                 averaged_feature.append(average)
@@ -170,14 +181,20 @@ def collator(batch):
     data = []
     labels = []
 
-    for text, label in batch:
-        data.append(text)
-        labels.append(label)
+    for items in batch:
+        if type(items) == list:
+            data.append(items)
+        else:
+            data.append(items[0])
+            labels.append(items[1])
 
     padded_data = zip(*itertools.zip_longest(*data, fillvalue=0))
 
     texts = torch.tensor(list(padded_data))
-    labels = torch.tensor(labels)
+    if len(labels) != 0:
+        labels = torch.tensor(labels)
+    else:
+        labels = None
 
     return texts, labels
 
@@ -208,10 +225,10 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             optimizer.zero_grad()
 
             # do forward propagation
-            predicted_labels = model.forward(texts)
+            prediction = model.forward(texts)
 
             # do loss calculation
-            loss = criterion(predicted_labels, labels)
+            loss = criterion(prediction, labels)
 
             # do backward propagation
             loss.backward()
@@ -220,11 +237,11 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             optimizer.step()
 
             # calculate running loss value for non padding
-            running_loss = loss
+            running_loss = loss.item() * texts.size(0)
 
             # print loss value every 100 steps and reset the running loss
-            if step % 100 == 99:
-                print('[%d, %5d] loss: %.3f' %
+            if step % 10 == 9:
+                print('[%d, %5d] loss: %.6f' %
                     (epoch + 1, step + 1, running_loss / 100))
                 running_loss = 0.0
 
@@ -233,10 +250,8 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
     # define the checkpoint and save it to the model path
     # tip: the checkpoint can contain more than just the model
     checkpoint = {
-        'epoch': num_epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'loss': loss
+        'model': model,
+        'vocabulary': dataset.vocab
     }
     torch.save(checkpoint, model_path)
 
@@ -252,8 +267,14 @@ def test(model, dataset, class_map, device='cpu'):
         for data in data_loader:
             texts = data[0].to(device)
             outputs = model(texts).cpu()
-            # get the label predictions
+            print(outputs[0])
 
+            # get the label predictions
+            predictions = torch.argmax(outputs, dim=1).tolist()
+            
+            for p in predictions:
+                labels.append(class_map[p])
+    
     return labels
 
 
@@ -274,7 +295,7 @@ def main(args):
         
         # you may change these hyper-parameters
         learning_rate = 1
-        batch_size = 100
+        batch_size = 20
         num_epochs = 20
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
@@ -283,13 +304,14 @@ def main(args):
         assert args.model_path is not None, "Please provide the model to test using --model_path argument"
         
         # create the test dataset object using LangDataset class
-
+        checkpoint = torch.load(args.model_path)
+        dataset = LangDataset(args.text_path, label_path=None, vocab=checkpoint['vocabulary'])
 
         # initialize and load the model
-
+        model = checkpoint['model']
 
         # the lang map should contain the mapping between class id to the language id (e.g. eng, fra, etc.)
-        lang_map = None
+        lang_map = {0: 'eng', 1: 'deu', 2: 'fra', 3: 'ita', 4: 'spa'}
 
         # run the prediction
         preds = test(model, dataset, lang_map, device)
