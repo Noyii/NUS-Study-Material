@@ -1,11 +1,8 @@
-import os
-import re
-import sys
-import string
 import argparse
 import datetime
 
 from collections import Counter
+import itertools
 
 import torch
 import torch.nn as nn
@@ -39,39 +36,30 @@ class LangDataset(Dataset):
 
             return output
 
-        self.texts = __file_to_list(text_path)
         if label_path is not None:
             self.labels = __file_to_list(label_path)
 
+        data = __file_to_list(text_path)
+        self.texts = []
+        self.vocab = dict()
+        count = 1
+
+        for text in data:
+            characters = ['$'] + [c for c in text] + ['$']
+            bigram_list = []
+            
+            for i in range(len(characters)-1):
+                bigram = characters[i] + characters[i+1]
+                bigram_list.append(bigram)
+
+                if bigram not in self.vocab.keys():
+                    self.vocab[bigram] = count
+                    count += 1
+
+            self.texts.append(bigram_list)
+        
         if vocab is not None:
             self.vocab = vocab
-        else:
-            self.vocab = dict()
-            count = 0
-            self.bigram_matrix = []
-
-            for text in self.texts:
-                characters = ['$'] + [c for c in text] + ['$']
-                bigram_list = []
-                
-                for i in range(len(characters)-1):
-                    bigram = characters[i] + characters[i+1]
-                    bigram_list.append(bigram)
-
-                    if bigram not in self.vocab.keys():
-                        self.vocab[bigram] = count
-                        count += 1
-
-                self.bigram_matrix.append(bigram_list)
-        
-        self.embedding_matrix = []
-        for i, bigrams in enumerate(self.bigram_matrix):
-            feature = []
-            counter = Counter(bigrams)
-            for key in self.vocab.keys():
-                feature.append(counter[key])
-            
-            self.embedding_matrix.append(feature)
 
 
     def vocab_size(self):
@@ -80,9 +68,8 @@ class LangDataset(Dataset):
             num_vocab: size of the vocabulary
             num_class: number of class labels
         """
-        num_vocab = self.vocab.__len__()
-        classes = Counter(self.labels)
-        num_class = classes.__len__()
+        num_vocab = len(self.vocab)
+        num_class = len(Counter(self.labels))
 
         return num_vocab, num_class
 
@@ -91,7 +78,7 @@ class LangDataset(Dataset):
         """
         Return the number of instances in the data
         """
-        return len(self)
+        return len(self.texts)
 
 
     def __getitem__(self, i):
@@ -102,6 +89,42 @@ class LangDataset(Dataset):
 
         DO NOT pad the tensor here, do it at the collator function.
         """
+        label = self.labels[i]
+
+        bigrams = self.texts[i]
+        text = []
+        for bigram in bigrams:
+            text.append(self.vocab[bigram])
+        
+        return text, label
+
+
+class Model(nn.Module):
+    """
+    Define a model that with one embedding layer with dimension 16 and
+    a feed-forward layers that reduce the dimension from 16 to 200 with ReLU activation
+    a dropout layer, and a feed-forward layers that reduce the dimension from 200 to num_class
+    """
+    def __init__(self, num_vocab, num_class, dropout=0.3):
+        super().__init__()
+        # define your model here
+        self.vocab_size = num_vocab
+
+        self.embedding = nn.Linear(16, 200)
+        self.out = nn.Linear(200, num_class)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+        # define the forward function here
+        self.embedding_matrix = []
+        for i, bigrams in enumerate(self.texts):
+            feature = []
+            counter = Counter(bigrams)
+            for key in self.vocab.keys():
+                feature.append(counter[key])
+            
+            self.embedding_matrix.append(feature)
+
         label = self.labels[i]
         compact_embeddings = list(zip(*self.embedding_matrix))
         bigrams = self.bigram_matrix[i]
@@ -120,34 +143,12 @@ class LangDataset(Dataset):
             h.append(average)
         
         text = h
-        
-        return text, label
 
 
-class Model(nn.Module):
-    """
-    Define a model that with one embedding layer with dimension 16 and
-    a feed-forward layers that reduce the dimension from 16 to 200 with ReLU activation
-    a dropout layer, and a feed-forward layers that reduce the dimension from 200 to num_class
-    """
-    def __init__(self, num_vocab, num_class, dropout=0.3):
-        super().__init__()
-        # define your model here
-        self.vocab_size = num_vocab
-
-        self.embedding = nn.Linear(16, 200)
-        self.out = nn.Linear(200, num_class)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(dropout)
-
-    def forward(self, x):
-        # define the forward function here
-        out = self.embedding(x)
-        h1 = self.relu(out)
-        out = self.dropout(h1)
-        h2 = self.out(out)
-
-        output = torch.softmax(h2)
+        h1 = nn.ReLU(self.embedding(x))
+        regularized_h1 = self.dropout(h1)
+        out = self.out(regularized_h1)
+        output = nn.Softmax(out)
 
         return output
 
@@ -159,9 +160,18 @@ def collator(batch):
         texts: a tensor that combines all the text in the mini-batch, pad with 0
         labels: a tensor that combines all the labels in the mini-batch
     """
-    texts = None
-    labels = None
-    
+    data = []
+    labels = []
+
+    for text, label in batch:
+        data.append(text)
+        labels.append(label)
+
+    padded_data = zip(*itertools.zip_longest(*data, fillvalue=0))
+
+    texts = torch.tensor(list(padded_data))
+    labels = torch.tensor(labels)
+
     return texts, labels
 
 
@@ -251,9 +261,9 @@ def main(args):
         model = Model(num_vocab, num_class).to(device)
         
         # you may change these hyper-parameters
-        learning_rate = None
-        batch_size = None
-        num_epochs = None
+        learning_rate = 1
+        batch_size = 100
+        num_epochs = 20
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
     
