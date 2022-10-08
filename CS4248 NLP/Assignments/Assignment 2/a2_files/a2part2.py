@@ -1,8 +1,7 @@
 import argparse
 import datetime
-
-from collections import Counter
 import itertools
+from collections import Counter
 
 import torch
 import torch.nn as nn
@@ -37,7 +36,12 @@ class LangDataset(Dataset):
             return output
 
         if label_path is not None:
-            self.labels = __file_to_list(label_path)
+            label_dict = {'eng': 0, 'deu': 1, 'fra': 2, 'ita': 3, 'spa': 4}
+            labels = __file_to_list(label_path)
+            self.labels = []
+            
+            for label in labels:
+                self.labels.append(label_dict[label])
 
         data = __file_to_list(text_path)
         self.texts = []
@@ -116,41 +120,44 @@ class Model(nn.Module):
 
     def forward(self, x):
         # define the forward function here
-        self.embedding_matrix = []
-        for i, bigrams in enumerate(self.texts):
-            feature = []
-            counter = Counter(bigrams)
-            for key in self.vocab.keys():
-                feature.append(counter[key])
-            
-            self.embedding_matrix.append(feature)
-
-        label = self.labels[i]
-        compact_embeddings = list(zip(*self.embedding_matrix))
-        bigrams = self.bigram_matrix[i]
-        feature = []
-
-        for bigram in bigrams:
-            x = compact_embeddings[self.vocab[bigram]]
-            feature.append(x)
-
-        h = []
-        d = len(feature[0])
-        compact_feature = list(zip(*feature))
-
-        for j in range(d):
-            average = sum(compact_feature[j]) / len(bigrams)
-            h.append(average)
-        
-        text = h
-
-
-        h1 = nn.ReLU(self.embedding(x))
+        data = self.__embed_input(x)
+        h1 = nn.ReLU(self.embedding(data))
         regularized_h1 = self.dropout(h1)
         out = self.out(regularized_h1)
         output = nn.Softmax(out)
 
         return output
+
+    def __embed_input(self, x):
+        d = len(x)
+        embedding_matrix = [[0] * (self.vocab_size)] * d
+        input_data = x.tolist()
+
+        for i, bigrams in enumerate(input_data):
+            count_of_each_bigram = Counter(bigrams)
+            for bigram, count in count_of_each_bigram.items():
+                if bigram != 0: # If not padding
+                    embedding_matrix[i][bigram-1] = count
+
+        compact_embeddings = list(zip(*embedding_matrix))
+        data = []
+        for bigrams in input_data:
+            feature = []
+            for bigram in bigrams:
+                if bigram == 0: # ignore padding in average
+                    break
+                feature.append(compact_embeddings[bigram-1]) # k * d
+
+            compact_feature = list(zip(*feature))
+            k = len(feature)
+            averaged_feature = []
+            for i in range(d):
+                average = sum(compact_feature[i]) / k
+                averaged_feature.append(average)
+
+            data.append(averaged_feature)
+
+        return torch.tensor(data)
 
 
 def collator(batch):
@@ -213,7 +220,7 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             optimizer.step()
 
             # calculate running loss value for non padding
-            running_loss = loss-padd
+            running_loss = loss
 
             # print loss value every 100 steps and reset the running loss
             if step % 100 == 99:
@@ -225,7 +232,12 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
     
     # define the checkpoint and save it to the model path
     # tip: the checkpoint can contain more than just the model
-    checkpoint = None
+    checkpoint = {
+        'epoch': num_epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': loss
+    }
     torch.save(checkpoint, model_path)
 
     print('Model saved in ', model_path)
