@@ -40,18 +40,6 @@ class LangDataset(Dataset):
             # Testing phase
             self.text_vocab = vocab['texts']
             self.label_vocab = vocab['labels']
-
-        self.embedding_matrix = []
-        for i, _ in enumerate(self.texts):
-            items = self.__getitem__(i)
-            if len(items) == 2:
-                encoded_bigrams = items[0]
-            else:
-                encoded_bigrams = items
-            
-            self.embedding_matrix.append(self.make_bow_vector(encoded_bigrams))
-
-        # self.embedding_matrix = [self.make_bow_vector(self.__getitem__(i)[0]) for i, _ in enumerate(self.texts)]
         
     
     def file_to_list(self, file_path):
@@ -141,22 +129,6 @@ class LangDataset(Dataset):
         label = self.label_vocab[self.labels[i]]
         return text, label
 
-    
-    def make_bow_vector(self, sentence):
-        vocab_size = self.vocab_size()[0]
-        vec = torch.zeros(vocab_size)
-
-        for word in sentence:
-            if word == 0: # padding
-                break
-
-            if word <= vocab_size:
-                vec[word-1] += 1
-            else:
-                vec[vocab_size-1] += 1 # unknown word
-
-        return vec
-
 
 def collator(batch):
     """
@@ -186,12 +158,6 @@ def collator(batch):
     return texts, labels
 
 
-def embedd_data(embedding_matrix, texts):
-    data = torch.stack([embedding_matrix[i] for i, _ in enumerate(texts)])
-    average = (data.sum(dim=1)/(data!=0).sum(dim=1)).reshape(-1, 1)
-    return average
-
-
 class Model(nn.Module):
     """
     Define a model that with one embedding layer with dimension 16 and
@@ -201,19 +167,18 @@ class Model(nn.Module):
     def __init__(self, num_vocab, num_class, dropout=0.3):
         super().__init__()
         # define your model here
-        self.vocab_size = num_vocab
-        self.embedding = nn.Linear(1, 200)
-        self.output = nn.Linear(200, num_class)
+        self.embedding = nn.Embedding(num_vocab+1, 16)
+        self.input = nn.Linear(16, 500)
+        self.output = nn.Linear(500, num_class)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
         # define the forward function here
-        h1 = self.dropout(self.embedding(x))
-        activated_h1 = F.relu(h1)
-        output = self.output(activated_h1)
+        regularized_h0 = self.dropout(self.input(x))
+        h1 = F.relu(regularized_h0)
+        output = self.output(h1)
 
         probs = F.softmax(output, dim=1)
-
         return probs
 
 
@@ -239,14 +204,13 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             texts = data[0].to(device)
             labels = data[1].to(device)
 
-            # vocab_size, _ = dataset.vocab_size()
-            texts = embedd_data(dataset.embedding_matrix, texts).to(device)
-
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # do forward propagation
-            probabilities = model(texts)
+            embedded = model.embedding(texts)
+            h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
+            probabilities = model(h0)
 
             # do loss calculation
             loss = criterion(probabilities, labels)
@@ -295,10 +259,9 @@ def test(model, dataset, class_map, device='cpu'):
         for data in data_loader:
             texts = data[0].to(device)
 
-            # vocab_size, _ = dataset.vocab_size()
-            # texts = embedd_data(vocab_size, texts).to(device)
-            texts = embedd_data(dataset.embedding_matrix, texts).to(device)
-            outputs = model(texts).cpu()
+            embedded = model.embedding(texts)
+            h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
+            outputs = model(h0)
 
             # get the label predictions
             predictions = torch.argmax(outputs, dim=1).tolist()
@@ -323,9 +286,9 @@ def main(args):
         model = Model(num_vocab, num_class).to(device)
         
         # you may change these hyper-parameters
-        learning_rate = 0.05
-        batch_size = 100
-        num_epochs = 20
+        learning_rate = 0.005
+        batch_size = 20
+        num_epochs = 200
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
     if args.test:
