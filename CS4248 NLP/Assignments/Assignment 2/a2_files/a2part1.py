@@ -91,24 +91,8 @@ def question9(x):
     Given a 3-D tensor x (b, n, m), calculate the mean along the n dimension without accounting for the 0-values.
     DO NOT use loop, list comprehension, or any other similar operations.
     """
-    batch, _, m = x.size()
-    output = []
-    
-    for b in range(batch):
-        result = []
-        for t in x[b]:
-            # Loop over every tensor backwards
-            for j in range(m-1, -1, -1):
-                # If the element is not 0, padding is over. Break.
-                if t[j] != 0:
-                    break
-            
-            # Get the sum of all elements in the tensor divided by non-padded counts
-            result.append(t.sum()/(j+1))
-        
-        output.append(result)
-
-    return torch.tensor(output)
+    avg = x.sum(dim=2)/(x!=0).sum(dim=2)
+    return avg
 
 
 def question10(pairs):
