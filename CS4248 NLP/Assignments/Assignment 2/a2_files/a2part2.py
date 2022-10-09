@@ -167,8 +167,8 @@ class Model(nn.Module):
     def __init__(self, num_vocab, num_class, dropout=0.3):
         super().__init__()
         # define your model here
-        self.embedding = nn.Embedding(num_vocab+1, 16)
-        self.input = nn.Linear(16, 500)
+        self.embedding = nn.Embedding(num_vocab+1, 32)
+        self.input = nn.Linear(32, 500) # (32, 500) --> 96.80
         self.output = nn.Linear(500, num_class)
         self.dropout = nn.Dropout(p=dropout)
 
@@ -286,9 +286,9 @@ def main(args):
         model = Model(num_vocab, num_class).to(device)
         
         # you may change these hyper-parameters
-        learning_rate = 0.005
+        learning_rate = 0.005 # 0.01 -> 96.4 at 216
         batch_size = 20
-        num_epochs = 200
+        num_epochs = 250
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
     if args.test:
