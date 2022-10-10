@@ -55,12 +55,13 @@ class LangDataset(Dataset):
 
 
     def preprocess(self, raw_data):
-        os.system('pip3 install Unidecode')
-        from unidecode import unidecode
+        # os.system('pip3 install Unidecode')
+        # from unidecode import unidecode
         
         data = []
         for text in raw_data:
-            text = re.sub('[^a-z]+',' ', unidecode(text.lower()))
+            # text = re.sub('[^a-z]+',' ', unidecode(text.lower()))
+            text = re.sub('[^a-z]+',' ', text.lower())
             characters = [c for c in text]
             bigrams = [characters[i]+characters[i+1] for i in range(len(characters)-1)]
             data.append(bigrams)
@@ -167,14 +168,17 @@ class Model(nn.Module):
     def __init__(self, num_vocab, num_class, dropout=0.3):
         super().__init__()
         # define your model here
-        self.embedding = nn.Embedding(num_vocab+1, 32)
-        self.input = nn.Linear(32, 500) # (32, 500) --> 96.80
-        self.output = nn.Linear(500, num_class)
+        self.embedding = nn.Embedding(num_vocab+1, 64)
+        self.input = nn.Linear(64, 200)
+        self.output = nn.Linear(200, num_class)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
         # define the forward function here
-        regularized_h0 = self.dropout(self.input(x))
+        embedded = self.embedding(x)
+        h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
+
+        regularized_h0 = self.dropout(self.input(h0))
         h1 = F.relu(regularized_h0)
         output = self.output(h1)
 
@@ -208,9 +212,7 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
             optimizer.zero_grad()
 
             # do forward propagation
-            embedded = model.embedding(texts)
-            h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
-            probabilities = model(h0)
+            probabilities = model(texts)
 
             # do loss calculation
             loss = criterion(probabilities, labels)
@@ -258,10 +260,7 @@ def test(model, dataset, class_map, device='cpu'):
     with torch.no_grad():
         for data in data_loader:
             texts = data[0].to(device)
-
-            embedded = model.embedding(texts)
-            h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
-            outputs = model(h0)
+            outputs = model(texts)
 
             # get the label predictions
             predictions = torch.argmax(outputs, dim=1).tolist()
@@ -286,9 +285,9 @@ def main(args):
         model = Model(num_vocab, num_class).to(device)
         
         # you may change these hyper-parameters
-        learning_rate = 0.005 # 0.01 -> 96.4 at 216
-        batch_size = 20
-        num_epochs = 250
+        learning_rate = 0.005
+        batch_size = 8
+        num_epochs = 150
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
     if args.test:
@@ -300,7 +299,7 @@ def main(args):
         num_vocab, num_class = dataset.vocab_size()
 
         # initialize and load the model
-        model = Model(num_vocab, num_class)
+        model = Model(num_vocab, num_class).to(device)
         model.load_state_dict(checkpoint['model_state_dict'])
 
         # the lang map should contain the mapping between class id to the language id (e.g. eng, fra, etc.)
