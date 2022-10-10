@@ -142,12 +142,15 @@ def collator(batch):
     labels = []
 
     for items in batch:
+        # Testing phase only contains texts
         if type(items) == list:
             data.append(items)
         else:
+            # Training phase contains both texts and labels
             data.append(items[0])
             labels.append(items[1])
 
+    # Pad all tensors to match length of the longest tensor 
     padded_data = zip(*itertools.zip_longest(*data, fillvalue=0))
     texts = torch.tensor(list(padded_data))
 
@@ -168,16 +171,28 @@ class Model(nn.Module):
     def __init__(self, num_vocab, num_class, dropout=0.3):
         super().__init__()
         # define your model here
+
+        # Word Embedding Layer, (num_vocab+1) --> vocab_size from 1 to v + 0 (from padding) 
+        # Setting d = 64
         self.embedding = nn.Embedding(num_vocab+1, 64)
+
+        # Input of feed-forward network
         self.input = nn.Linear(64, 200)
+
+        # Hidden layer
         self.output = nn.Linear(200, num_class)
+
+        # Regularization
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
         # define the forward function here
+
+        # Create word embeddings of padded input of a batch, and average over k bigrams by ignoring the padding
         embedded = self.embedding(x)
         h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
 
+        # Input into the feed-forward netowork
         regularized_h0 = self.dropout(self.input(h0))
         h1 = F.relu(regularized_h0)
         output = self.output(h1)
