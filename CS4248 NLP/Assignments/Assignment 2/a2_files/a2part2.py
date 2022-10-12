@@ -177,13 +177,13 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(num_vocab+1, 64)
 
         # Input of feed-forward network
-        self.input = nn.Linear(64, 350)
+        self.input = nn.Linear(64, 100)
 
         # Hidden layer
-        self.output = nn.Linear(350, num_class)
+        self.output = nn.Linear(100, num_class)
 
         # Regularization
-        self.dropout = nn.Dropout(p=dropout, inplace=True)
+        self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x):
         # define the forward function here
