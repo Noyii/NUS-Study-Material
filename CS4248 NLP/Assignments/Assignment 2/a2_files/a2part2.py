@@ -177,13 +177,13 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(num_vocab+1, 64)
 
         # Input of feed-forward network
-        self.input = nn.Linear(64, 200)
+        self.input = nn.Linear(64, 350)
 
         # Hidden layer
-        self.output = nn.Linear(200, num_class)
+        self.output = nn.Linear(350, num_class)
 
         # Regularization
-        self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout, inplace=True)
 
     def forward(self, x):
         # define the forward function here
@@ -193,11 +193,15 @@ class Model(nn.Module):
         h0 = embedded.sum(dim=1)/(embedded!=0).sum(dim=1)
 
         # Input into the feed-forward netowork
+        # activated_h0 = F.relu(self.input(h0))
+        # h1 = self.dropout(activated_h0)
+
         regularized_h0 = self.dropout(self.input(h0))
         h1 = F.relu(regularized_h0)
-        output = self.output(h1)
 
+        output = self.output(h1)
         probs = F.softmax(output, dim=1)
+
         return probs
 
 
@@ -301,7 +305,7 @@ def main(args):
         
         # you may change these hyper-parameters
         learning_rate = 0.005
-        batch_size = 8
+        batch_size = 15 # 10 gives 97.6% locally
         num_epochs = 150
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
