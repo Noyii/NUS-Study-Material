@@ -216,7 +216,8 @@ def train(model, dataset, batch_size, learning_rate, num_epoch, device='cpu', mo
 
     # assign these variables
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # optimizer = optim.Adagrad(model.parameters(), lr=learning_rate)
 
     start = datetime.datetime.now()
     for epoch in range(num_epoch):
@@ -304,9 +305,9 @@ def main(args):
         model = Model(num_vocab, num_class).to(device)
         
         # you may change these hyper-parameters
-        learning_rate = 0.005
-        batch_size = 15 # 10 gives 97.6% locally
-        num_epochs = 150
+        learning_rate = 0.0005
+        batch_size = 15
+        num_epochs = 180
 
         train(model, dataset, batch_size, learning_rate, num_epochs, device, args.model_path)
     if args.test:

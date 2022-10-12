@@ -11,7 +11,6 @@ eng
 eng
 eng
 eng
-ita
 eng
 eng
 eng
@@ -28,7 +27,8 @@ eng
 eng
 eng
 eng
-ita
+eng
+eng
 eng
 eng
 eng
@@ -48,7 +48,6 @@ eng
 eng
 eng
 ita
-fra
 eng
 eng
 eng
@@ -68,8 +67,6 @@ eng
 eng
 eng
 eng
-fra
-fra
 eng
 eng
 eng
@@ -90,7 +87,9 @@ eng
 eng
 eng
 eng
-fra
+eng
+ita
+eng
 eng
 eng
 eng
@@ -98,6 +97,7 @@ eng
 eng
 eng
 eng
+eng
 deu
 deu
 deu
@@ -108,11 +108,9 @@ deu
 deu
 deu
 deu
-fra
 deu
 deu
 deu
-fra
 deu
 deu
 deu
@@ -134,8 +132,6 @@ deu
 deu
 deu
 deu
-fra
-fra
 deu
 deu
 deu
@@ -166,13 +162,17 @@ deu
 deu
 deu
 deu
-fra
+deu
 deu
 deu
 deu
 deu
 deu
 deu
+deu
+deu
+deu
+deu
 fra
 deu
 deu
@@ -294,7 +294,7 @@ fra
 fra
 fra
 fra
-fra
+deu
 fra
 eng
 fra
@@ -353,7 +353,6 @@ ita
 ita
 ita
 ita
-spa
 ita
 ita
 ita
@@ -371,7 +370,7 @@ ita
 ita
 ita
 ita
-fra
+ita
 ita
 ita
 ita
@@ -398,6 +397,7 @@ ita
 ita
 ita
 ita
+ita
 spa
 spa
 spa
@@ -445,14 +445,12 @@ spa
 spa
 spa
 spa
-ita
 spa
 spa
 spa
 spa
 spa
 spa
-ita
 spa
 spa
 spa
@@ -473,7 +471,6 @@ spa
 spa
 spa
 spa
-fra
 spa
 spa
 spa
@@ -489,7 +486,10 @@ spa
 spa
 spa
 spa
-ita
+spa
+spa
+spa
+spa
 spa
 spa
 spa
