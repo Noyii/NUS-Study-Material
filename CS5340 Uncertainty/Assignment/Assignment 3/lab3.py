@@ -1,9 +1,9 @@
 """ CS5340 Lab 3: Hidden Markov Models
 See accompanying PDF for instructions.
 
-Name: <Your Name here>
-Email: <username>@u.nus.edu
-Student ID: A0123456X
+Name: Niharika Shrivastava
+Email: e0954756@u.nus.edu
+Student ID: A0254355A
 """
 import numpy as np
 import scipy.stats
@@ -67,6 +67,43 @@ def e_step(x_list, pi, A, phi):
     "gamma_list" and "xi_list" with the correct values.
     Be sure to use the scaling factor for numerical stability.
     """
+    K = n_states
+    N = len(x_list[0])
+    batches = len(x_list)
+    alpha = []
+    scaling_factor = []
+
+    # Initialize alpha
+    emission_probs = emission(x_list, phi, K) # (N * batches * K)
+    a =  emission_probs[0] * pi # (batches * K)
+    c = np.sum(a, axis=1).reshape(batches, 1) # (batches * 1)
+    a /= c
+    alpha.append(a)
+    scaling_factor.append(c)
+
+    # Forward step
+    for n in range(1, N):
+        a = alpha[n-1].dot(A) * emission_probs[n]
+        c = np.sum(a, axis=1).reshape(batches, 1) # (batches * 1)
+        a /= c
+        alpha.append(a)
+        scaling_factor.append(c)
+
+    alpha = np.array(alpha) # (N * batches * K)
+
+    # Initialize beta
+    beta = np.ones((N, batches, K))
+
+    # Backward step
+    for n in range(N-2, -1, -1):
+        # print(beta[n+1])
+        b = (beta[n+1] * emission_probs[n+1]).dot(A.T)
+        b /= scaling_factor[n+1]
+        beta[n] = b
+    
+    gamma = alpha * beta
+    gamma_list = list(np.transpose(gamma, (1, 0, 2)))
+
 
     return gamma_list, xi_list
 
@@ -130,3 +167,8 @@ def fit_hmm(x_list, n_states):
     """
 
     return pi, A, phi
+
+
+def emission(x, phi, K):
+    pdf = [scipy.stats.norm.pdf(x, loc=phi['mu'][k], scale=phi['sigma'][k]) for k in range(K)]
+    return np.array(pdf).T

@@ -6,6 +6,7 @@ import numpy as np
 import os
 
 from lab3 import e_step, m_step, fit_hmm
+# from trial import e_step, m_step, fit_hmm
 
 
 TEST_CASES = ['seq_short', 'seq_long']
@@ -42,6 +43,7 @@ def test_e_step():
         assert len(gamma_list) == len(npzfile['gamma_list']), \
             'Gamma list is of incorrect length'
         for g in range(len(gamma_list)):
+            # print(npzfile['gamma_list'][0])
             assert np.allclose(gamma_list, npzfile['gamma_list']), \
                 'Gamma incorrect'
 
@@ -111,5 +113,5 @@ def run_fit_hmm():
 if __name__ == '__main__':
     os.makedirs('pred', exist_ok=True)
     test_e_step()
-    test_m_step()
-    run_fit_hmm()
+    # test_m_step()
+    # run_fit_hmm()
