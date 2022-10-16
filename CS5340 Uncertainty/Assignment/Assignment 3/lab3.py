@@ -104,6 +104,18 @@ def e_step(x_list, pi, A, phi):
     gamma = alpha * beta
     gamma_list = list(np.transpose(gamma, (1, 0, 2)))
 
+    # Joint Posterior Distribution
+    xi = []
+    for n in range(1, N):
+        a = np.transpose(np.tile(alpha[n-1], (K, 1, 1)).T, (1, 0, 2))
+        e = np.transpose(np.tile(emission_probs[n], (K, 1, 1)), (1, 0, 2))
+        b = np.transpose(np.tile(beta[n], (K, 1, 1)), (1, 0, 2))
+        c = scaling_factor[n]
+        x = (a * e * b * A) / c[:, np.newaxis]
+        xi.append(x)
+
+    xi = np.array(xi)
+    xi_list = list(np.transpose(xi, (1, 0, 2, 3)))
 
     return gamma_list, xi_list
 

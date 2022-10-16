@@ -72,11 +72,12 @@ class EmissionModelThread(threading.Thread):
     
     def run(self):
         model = EmissionModel(self.x, self.pi, self.A, self.phi)
-        # beta = model.beta(0)
-        # print(beta)
-        # return
         gamma = np.array([model.alpha(n) * model.beta(n) for n in range(model.N)])
         self.gamma = gamma
+
+        x = np.tile(model.alpha(0), (model.K, 1)).T
+        print(x.shape)
+        # return
 
         xi = np.array([ \
             np.tile(model.alpha(n), (model.K, 1)).T * \
