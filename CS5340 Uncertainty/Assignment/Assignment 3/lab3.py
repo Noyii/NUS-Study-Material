@@ -5,10 +5,12 @@ Name: Niharika Shrivastava
 Email: e0954756@u.nus.edu
 Student ID: A0254355A
 """
+from multiprocessing import current_process
 import numpy as np
 import scipy.stats
 from scipy.special import softmax
 from sklearn.cluster import KMeans
+from torch import threshold
 
 
 def initialize(n_states, x):
@@ -148,6 +150,31 @@ def m_step(x_list, gamma_list, xi_list):
     """ YOUR CODE HERE
     Compute the complete-data maximum likelihood estimates for pi, A, phi.
     """
+    K = n_states
+    N = len(x_list[0])
+    batches = len(x_list)
+    gamma_list = np.transpose(np.array(gamma_list), (1, 0, 2))
+    xi_list = np.array(xi_list)
+
+    # Pi calculation
+    pi = gamma_list[0] / np.sum(gamma_list[0], axis=1)[0]
+    pi = np.sum(pi, axis=0) / batches
+
+    # A calculation
+    sum_e = np.sum(np.sum(xi_list, axis=1), axis=0)
+    d = np.sum(sum_e, axis=1)[:, None]
+    A = sum_e / d
+
+    # Phi calculation
+    d = np.sum(np.sum(gamma_list, axis=0), axis=0)
+
+    x = np.tile(x_list, (K, 1, 1)).T
+    mu = np.sum(np.sum(gamma_list * x, axis=0), axis=0) / d
+    phi['mu'] = mu
+
+    modified_mu = np.tile(mu, (N, batches, 1))
+    sigma = np.sum(np.sum(gamma_list * np.power((x - modified_mu), 2), axis=0), axis=0)
+    phi['sigma'] = np.sqrt(sigma / d)
 
     return pi, A, phi
 
@@ -177,6 +204,15 @@ def fit_hmm(x_list, n_states):
     """ YOUR CODE HERE
      Populate the values of pi, A, phi with the correct values. 
     """
+    gamma_list, xi_list = e_step(x_list, pi, A, phi)
+    pi, A, phi = m_step(x_list, gamma_list, xi_list)
+
+    while current - old > 1e-4:
+        old = current
+        gamma_list, xi_list = e_step(x_list, pi, A, phi)
+        pi, A, phi = m_step(x_list, gamma_list, xi_list)
+        # calculate cuurent
+
 
     return pi, A, phi
 

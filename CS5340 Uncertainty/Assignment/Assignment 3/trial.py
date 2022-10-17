@@ -75,10 +75,6 @@ class EmissionModelThread(threading.Thread):
         gamma = np.array([model.alpha(n) * model.beta(n) for n in range(model.N)])
         self.gamma = gamma
 
-        x = np.tile(model.alpha(0), (model.K, 1)).T
-        print(x.shape)
-        # return
-
         xi = np.array([ \
             np.tile(model.alpha(n), (model.K, 1)).T * \
             np.tile(model.p_emission(n+1), (model.K, 1)) * \
@@ -220,6 +216,8 @@ def m_step(x_list, gamma_list, xi_list):
     phi['sigma'] = np.sum([np.sum(gamma_list[i] * 
             np.power(np.tile(x_list[i][:, None], (1, n_states)) - np.tile(phi['mu'], (N, 1)), 2), axis=0)
             for i in range(len(gamma_list))], axis=0)
+
+    print(phi['sigma'])
     phi['sigma'] /= denominator
     phi['sigma'] = np.sqrt(phi['sigma'])
 

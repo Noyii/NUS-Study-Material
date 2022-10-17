@@ -113,5 +113,5 @@ def run_fit_hmm():
 if __name__ == '__main__':
     os.makedirs('pred', exist_ok=True)
     test_e_step()
-    # test_m_step()
-    # run_fit_hmm()
+    test_m_step()
+    run_fit_hmm()
