@@ -204,17 +204,27 @@ def fit_hmm(x_list, n_states):
     """ YOUR CODE HERE
      Populate the values of pi, A, phi with the correct values. 
     """
+    old = {'pi': pi, 'A': A, 'phi': phi}
     gamma_list, xi_list = e_step(x_list, pi, A, phi)
     pi, A, phi = m_step(x_list, gamma_list, xi_list)
+    current = {'pi': pi, 'A': A, 'phi': phi}
 
-    while current - old > 1e-4:
+    while parameter_change(old, current) > 1e-4:
         old = current
+
         gamma_list, xi_list = e_step(x_list, pi, A, phi)
         pi, A, phi = m_step(x_list, gamma_list, xi_list)
-        # calculate cuurent
-
+        current = {'pi': pi, 'A': A, 'phi': phi}
 
     return pi, A, phi
+
+
+def parameter_change(old, current):
+    return np.max([np.max(np.absolute([
+                old['pi'] - current['pi'],
+                old['phi']['mu'] - current['phi']['mu'],
+                old['phi']['sigma'] - current['phi']['sigma']])),
+            np.max(np.absolute(old['A'] - current['A']))])
 
 
 def emission(x, phi, K):

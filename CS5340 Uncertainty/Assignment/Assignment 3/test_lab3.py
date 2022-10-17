@@ -6,7 +6,6 @@ import numpy as np
 import os
 
 from lab3 import e_step, m_step, fit_hmm
-# from trial import e_step, m_step, fit_hmm
 
 
 TEST_CASES = ['seq_short', 'seq_long']
