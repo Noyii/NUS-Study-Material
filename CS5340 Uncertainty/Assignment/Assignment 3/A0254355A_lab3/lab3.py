@@ -5,12 +5,10 @@ Name: Niharika Shrivastava
 Email: e0954756@u.nus.edu
 Student ID: A0254355A
 """
-from multiprocessing import current_process
 import numpy as np
 import scipy.stats
 from scipy.special import softmax
 from sklearn.cluster import KMeans
-from torch import threshold
 
 
 def initialize(n_states, x):
@@ -75,8 +73,12 @@ def e_step(x_list, pi, A, phi):
     alpha = []
     scaling_factor = []
 
+    def __emission(x, phi, K):
+        pdf = [scipy.stats.norm.pdf(x, loc=phi['mu'][k], scale=phi['sigma'][k]) for k in range(K)]
+        return np.array(pdf).T
+
     # Initialize alpha
-    emission_probs = emission(x_list, phi, K) # (N * batches * K)
+    emission_probs = __emission(x_list, phi, K) # (N * batches * K)
     a =  emission_probs[0] * pi # (batches * K)
     c = np.sum(a, axis=1).reshape(batches, 1) # (batches * 1)
     a /= c
@@ -98,7 +100,6 @@ def e_step(x_list, pi, A, phi):
 
     # Backward step
     for n in range(N-2, -1, -1):
-        # print(beta[n+1])
         b = (beta[n+1] * emission_probs[n+1]).dot(A.T)
         b /= scaling_factor[n+1]
         beta[n] = b
@@ -225,8 +226,3 @@ def parameter_change(old, current):
                 old['phi']['mu'] - current['phi']['mu'],
                 old['phi']['sigma'] - current['phi']['sigma']])),
             np.max(np.absolute(old['A'] - current['A']))])
-
-
-def emission(x, phi, K):
-    pdf = [scipy.stats.norm.pdf(x, loc=phi['mu'][k], scale=phi['sigma'][k]) for k in range(K)]
-    return np.array(pdf).T
