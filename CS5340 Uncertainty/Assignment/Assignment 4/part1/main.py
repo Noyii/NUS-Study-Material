@@ -22,7 +22,52 @@ PREDICTION_DIR = os.path.join(DATA_DIR, 'predictions')
 
 
 """ ADD HELPER FUNCTIONS HERE """
+from collections import defaultdict
 
+def index_from_sample(factor, evidence, sample):
+    assignment = np.zeros(len(factor.var))
+
+    for i in range(len(factor.var)):
+        var = factor.var[i]
+
+        if var in evidence.keys():
+            assignment[i] = evidence[var]
+        else:
+            for s in sample:
+                if s[0] == var:
+                    assignment[i] = s[1]
+
+    return assignment_to_index(assignment, factor.card)
+
+
+def combine_factor(A, B):
+    if A.is_empty():
+        return B
+    if B.is_empty():
+        return A
+
+    out = Factor()
+    # Set the variables of the output
+    out.var = np.union1d(A.var, B.var)
+
+    # Set the cardinality of the output
+    out.card = np.zeros(len(out.var), np.int64)
+    mapA = np.argmax(out.var[None, :] == A.var[:, None], axis=-1)
+    mapB = np.argmax(out.var[None, :] == B.var[:, None], axis=-1)
+    out.card[mapA] = A.card
+    out.card[mapB] = B.card
+
+    # Initialize the factor values to zero
+    out.val = np.zeros(np.prod(out.card))
+    return out
+
+
+def joint_factor(factors):
+    result = Factor()
+    for factor in factors:
+        result = combine_factor(result, factor)
+
+    return result
 
 
 """ END HELPER FUNCTIONS HERE """
@@ -44,6 +89,10 @@ def _sample_step(nodes, proposal_factors):
     samples = {}
 
     """ YOUR CODE HERE: Use np.random.choice """
+    for node in nodes:
+        sample_distribution = proposal_factors[node]
+        factor = factor_evidence(sample_distribution, samples)
+        samples[node] = np.random.choice(factor.card[0], 1, p=factor.val)[0]
     """ END YOUR CODE HERE """
 
     assert len(samples.keys()) == len(nodes)
@@ -71,7 +120,34 @@ def _get_conditional_probability(target_factors, proposal_factors, evidence, num
     out = Factor()
 
     """ YOUR CODE HERE """
+    updated_proposal_factors = {}
+    for node, factor in proposal_factors.items():
+        observed_factor = factor_evidence(factor, evidence)
+        if node in observed_factor.var:
+            updated_proposal_factors[node] = observed_factor
 
+    nodes = np.array(list(updated_proposal_factors.keys()))
+    samples_count = defaultdict(int)
+    for _ in range(num_iterations):
+        sample = tuple(_sample_step(nodes, updated_proposal_factors).items())
+        samples_count[sample] += 1
+
+    weights = []
+    samples = list(samples_count.keys())
+    for sample in samples:
+        p = [factor.val[index_from_sample(factor, evidence, sample)] for factor in target_factors.values()]
+        q = [factor.val[index_from_sample(factor, evidence, sample)] for factor in updated_proposal_factors.values()]
+        weights.append(np.prod(p) / np.prod(q))
+    
+    weights = np.array(weights)
+    weights = weights / np.sum(weights)
+
+    factors = [factor for factor in updated_proposal_factors.values()]
+    out = joint_factor(factors)
+    for i, sample in enumerate(samples):
+        out.val[index_from_sample(out, evidence, sample)] = weights[i] * samples_count[sample]
+
+    out.val /= np.sum(out.val)
     """ END YOUR CODE HERE """
 
     return out
