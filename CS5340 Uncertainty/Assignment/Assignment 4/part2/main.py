@@ -25,8 +25,84 @@ PREDICTION_DIR = os.path.join(DATA_DIR, 'predictions')
 GROUND_TRUTH_DIR = os.path.join(DATA_DIR, 'ground-truth')
 
 """ HELPER FUNCTIONS HERE """
+from collections import defaultdict
+
+def index_from_sample(factor, evidence, sample):
+    assignment = np.zeros(len(factor.var))
+
+    for i in range(len(factor.var)):
+        var = factor.var[i]
+
+        if var in evidence.keys():
+            assignment[i] = evidence[var]
+        else:
+            for s in sample:
+                if s[0] == var:
+                    assignment[i] = s[1]
+
+    return assignment_to_index(assignment, factor.card)
 
 
+def combine_factor(A, B):
+    if A.is_empty():
+        return B
+    if B.is_empty():
+        return A
+
+    out = Factor()
+    # Set the variables of the output
+    out.var = np.union1d(A.var, B.var)
+
+    # Set the cardinality of the output
+    out.card = np.zeros(len(out.var), np.int64)
+    mapA = np.argmax(out.var[None, :] == A.var[:, None], axis=-1)
+    mapB = np.argmax(out.var[None, :] == B.var[:, None], axis=-1)
+    out.card[mapA] = A.card
+    out.card[mapB] = B.card
+
+    # Initialize the factor values to zero
+    out.val = np.zeros(np.prod(out.card))
+    return out
+
+
+def joint_factor(factors):
+    result = Factor()
+    for factor in factors:
+        result = combine_factor(result, factor)
+
+    return result
+
+
+def get_markov_blanket_nodes(node, edges):
+    blanket = {node}
+    children = set()
+    
+    for edge in edges:
+        # parents
+        if edge[1] == node:
+            blanket.add(edge[0])
+        # children
+        if edge[0] == node:
+            blanket.add(edge[1])
+            children.add(edge[1])
+
+    for edge in edges:
+        # co-parents
+        if edge[1] in children:
+            blanket.add(edge[0])
+
+    return blanket
+
+
+def get_mb_distribution(nodes, edges, factors):
+    result = {}
+    for node in nodes:
+        factor = factors[node]
+        blanket = get_markov_blanket_nodes(node, edges)
+        var_marginalized = factor.var[np.isin(factor.var, list(blanket), invert=True)]
+        result[node] = factor_marginalize(factor, var_marginalized)
+
+    return result
 """ END HELPER FUNCTIONS HERE"""
 
 
@@ -45,7 +121,15 @@ def _sample_step(nodes, factors, in_samples):
     samples = copy.deepcopy(in_samples)
 
     """ YOUR CODE HERE """
+    for node in nodes:
+        local_factor = factors[node]
+        new_sample = copy.deepcopy(samples)
+        del new_sample[node]
 
+        new_factor = factor_evidence(local_factor, new_sample)
+        probabilities = new_factor.val / np.sum(new_factor.val)
+
+        samples[node] = np.random.choice(new_factor.card[0], 1, p=probabilities)[0]
     """ END YOUR CODE HERE """
 
     return samples
@@ -72,7 +156,30 @@ def _get_conditional_probability(nodes, edges, factors, evidence, initial_sample
     conditional_prob = Factor()
 
     """ YOUR CODE HERE """
+    factors = get_mb_distribution(nodes, edges, factors)
+    updated_factors = {}
+    for node, factor in factors.items():
+        observed_factor = factor_evidence(factor, evidence)
+        if node in observed_factor.var:
+            updated_factors[node] = observed_factor
 
+    nodes = np.array(list(updated_factors.keys()))
+    sample = initial_samples
+    for _ in range(num_burn_in):
+        sample = _sample_step(nodes, updated_factors, sample)
+
+    samples_count = defaultdict(int)
+    for _ in range(num_iterations):
+        sample = _sample_step(nodes, updated_factors, sample)
+        s = tuple(sample.items())
+        samples_count[s] += 1
+
+    factors = [factor for factor in updated_factors.values()]
+    conditional_prob = joint_factor(factors)
+    for sample in list(samples_count.keys()):
+        conditional_prob.val[index_from_sample(conditional_prob, evidence, sample)] = samples_count[sample]
+
+    conditional_prob.val /= np.sum(conditional_prob.val)
     """ END YOUR CODE HERE """
 
     return conditional_prob

@@ -9,7 +9,6 @@ Student ID: A0254355A
 import os
 import json
 import numpy as np
-import networkx as nx
 from factor_utils import factor_evidence, factor_product, assignment_to_index
 from factor import Factor
 from argparse import ArgumentParser
@@ -41,23 +40,8 @@ def index_from_sample(factor, evidence, sample):
 
 
 def combine_factor(A, B):
-    if A.is_empty():
-        return B
-    if B.is_empty():
-        return A
-
-    out = Factor()
-    # Set the variables of the output
-    out.var = np.union1d(A.var, B.var)
-
-    # Set the cardinality of the output
-    out.card = np.zeros(len(out.var), np.int64)
-    mapA = np.argmax(out.var[None, :] == A.var[:, None], axis=-1)
-    mapB = np.argmax(out.var[None, :] == B.var[:, None], axis=-1)
-    out.card[mapA] = A.card
-    out.card[mapB] = B.card
-
-    # Initialize the factor values to zero
+    out = factor_product(A, B)
+    # Override the factor values to zero
     out.val = np.zeros(np.prod(out.card))
     return out
 
@@ -68,8 +52,6 @@ def joint_factor(factors):
         result = combine_factor(result, factor)
 
     return result
-
-
 """ END HELPER FUNCTIONS HERE """
 
 
