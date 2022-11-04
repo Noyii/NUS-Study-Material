@@ -142,7 +142,6 @@ def _get_conditional_probability(target_factors, proposal_factors, evidence, num
     # Normalize weights
     weights = weights / np.sum(weights)
 
-    # Create empty factor table -> output table
     factors = [factor for factor in updated_proposal_factors.values()]
     out = joint_factor(factors)
     for i, sample in enumerate(samples):
