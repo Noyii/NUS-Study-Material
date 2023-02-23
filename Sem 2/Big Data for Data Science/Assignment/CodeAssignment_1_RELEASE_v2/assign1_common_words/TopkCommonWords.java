@@ -170,6 +170,7 @@ public class TopkCommonWords {
 
   public static void main(String[] args) throws Exception {
     Configuration conf = new Configuration();
+    
     // Set input arguments as parameters so that it can be used in mapper/reducer
     String stopwords = Files.readString(java.nio.file.Path.of(args[2]));
     conf.set("STOPWORDS", stopwords);
