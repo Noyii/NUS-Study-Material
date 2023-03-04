@@ -1,6 +1,0 @@
-free_thresh: 0.196
-image: com1building.png
-negate: 0
-occupied_thresh: 0.95
-origin: [0.0, 0.0, 0.0]
-resolution: 0.02
