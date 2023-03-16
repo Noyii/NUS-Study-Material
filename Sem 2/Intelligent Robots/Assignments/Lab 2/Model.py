@@ -12,8 +12,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms import *
 from datetime import datetime
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torchvision.models import vgg16_bn
-
+from torchvision import models
 
 gpu_name = "mps"
 
@@ -23,107 +22,51 @@ class MyModel(nn.Module):
     def __init__(self, num_bins=5):
         super().__init__()
         self.num_bins = num_bins
-        # self.google_net = torch.hub.load('pytorch/vision:v0.10.0', 'googlenet', pretrained=True)
-        # def up_conv(in_channels, out_channels):
-        #     return nn.ConvTranspose2d(
-        #         in_channels, out_channels, kernel_size=2, stride=2
-        #     )
-
-        # def double_conv(in_channels, out_channels):
-        #     return nn.Sequential(
-        #         nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
-        #         nn.BatchNorm2d(out_channels),
-        #         nn.ReLU(inplace=True),
-        #         nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
-        #         nn.BatchNorm2d(out_channels),
-        #         nn.ReLU(inplace=True)
-        #     )
-    
-        # self.backbone = vgg16_bn(pretrained=True).features
-        
-        # self.down_conv1 = nn.Sequential(*self.backbone[:6])
-        # self.down_conv2 = nn.Sequential(*self.backbone[6:13])
-        # self.down_conv3 = nn.Sequential(*self.backbone[13:20])
-        # self.down_conv4 = nn.Sequential(*self.backbone[20:27])
-        # self.down_conv5 = nn.Sequential(*self.backbone[27:34])
-
-        # self.bottleneck = nn.Sequential(*self.backbone[34:])
-        # self.conv_bottleneck = double_conv(512, 1024)
-
-        # self.up_conv6 = up_conv(1024, 512)
-        # self.skip_conv6 = double_conv(512 + 512, 512)
-        
-        # self.up_conv7 = up_conv(512, 256)
-        # self.skip_conv7 = double_conv(256 + 512, 256)
-        
-        # self.up_conv8 = up_conv(256, 128)
-        # self.skip_conv8 = double_conv(128 + 256, 128)
-        
-        # self.up_conv9 = up_conv(128, 64)
-        # self.skip_conv9 = double_conv(64 + 128, 64)
-        
-        # self.up_conv10 = up_conv(64, 32)
-        # self.skip_conv10 = double_conv(32 + 64, 32)
-        
-        # self.skip_conv11 = nn.Conv2d(32, 32, kernel_size=1)
 
         # Build the CNN feature extractor
-        self.cnn = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(inplace=True),
-            nn.AdaptiveMaxPool2d(output_size=(1, 1))
-        )
+        # self.cnn = nn.Sequential(
+        #     nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1),
+        #     nn.BatchNorm2d(32),
+        #     nn.ReLU(inplace=True),
+        #     nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=1),
+        #     nn.BatchNorm2d(64),
+        #     nn.ReLU(inplace=True),
+        #     nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=2, padding=1),
+        #     nn.BatchNorm2d(64),
+        #     nn.ReLU(inplace=True),
+        #     nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=2, padding=1),
+        #     nn.BatchNorm2d(64),
+        #     nn.ReLU(inplace=True),
+        #     nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=2, padding=1),
+        #     nn.BatchNorm2d(64),
+        #     nn.ReLU(inplace=True),
+        #     nn.AdaptiveMaxPool2d(output_size=(1, 1))
+        # )
+
+        self.model_ft = models.resnet18(pretrained=True)
+        # self.set_parameter_requires_grad(self.model_ft, True)
+        num_ftrs = self.model_ft.fc.in_features
+        self.model_ft.fc = nn.Linear(num_ftrs, num_bins)
 
         # Build a FC heads, taking both the image features and the intention as input
-        self.fc = nn.Sequential(
-                    nn.Linear(in_features=32+3, out_features=num_bins))
-
+        self.fc = nn.Sequential(nn.Linear(in_features=num_bins+3, out_features=num_bins))
         print(f'A not so simple learner.')
+
+
+    def set_parameter_requires_grad(self, model, feature_extracting):
+        if feature_extracting:
+            for param in model.parameters():
+                param.requires_grad = False
+
 
     def forward(self, image, intention):
         # Map images to feature vectors
-        feature = self.cnn(image).flatten(1)
-        # down_conv1 = self.down_conv1(image)
-        # down_conv2 = self.down_conv2(down_conv1)
-        # down_conv3 = self.down_conv3(down_conv2)
-        # down_conv4 = self.down_conv4(down_conv3)
-        # down_conv5 = self.down_conv5(down_conv4)
-
-        # bottleneck = self.bottleneck(down_conv5)
-        # x = self.conv_bottleneck(bottleneck)
-
-        # x = self.up_conv6(x)
-        # x = torch.cat([x, down_conv5], dim=1)
-        # x = self.skip_conv6(x)
-
-        # x = self.up_conv7(x)
-        # x = torch.cat([x, down_conv4], dim=1)
-        # x = self.skip_conv7(x)
-
-        # x = self.up_conv8(x)
-        # x = torch.cat([x, down_conv3], dim=1)
-        # x = self.skip_conv8(x)
-
-        # x = self.up_conv9(x)
-        # x = torch.cat([x, down_conv2], dim=1)
-        # x = self.skip_conv9(x)
-
-        # x = self.up_conv10(x)
-        # x = torch.cat([x, down_conv1], dim=1)
-        # x = self.skip_conv10(x)
-
-        # feature = self.skip_conv11(x).flatten(1)
+        # feature = self.cnn(image).flatten(1)
+        feature = self.model_ft(image).flatten(1)
 
         # Cast intention to one-hot encoding 
         intention = intention.unsqueeze(1)
         onehot_intention = torch.zeros(intention.shape[0], 3, device=intention.device).scatter_(1, intention, 1)
-        
         # Predict control
         control = self.fc(torch.cat((feature, onehot_intention), dim=1)).view(-1, self.num_bins)
 
@@ -193,22 +136,16 @@ class MyDataset(Dataset):
         else:
             self.data = pd.read_csv(os.path.join(self.data_dir, 'val.txt'), sep=' ', engine='python')
 
-        self.preprocess = Compose([
-            Resize((112, 112)),
-            ToTensor(),
-            Normalize(mean=[0.5071, 0.4866, 0.4409], std=[0.2675, 0.2565, 0.2761]),
-            RandomResizedCrop((32,32),scale=(0.8,1.0),ratio=(0.9,1.1)),
-            RandomRotation(10)
-        ])
-
         # self.preprocess = Compose([
-        #     Resize(224),
+        #     Resize((224, 224)),
         #     ToTensor(),
-        #     Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        #     RandomResizedCrop((32,32),scale=(0.8,1.0),ratio=(0.9,1.1)),
-        #     RandomRotation(10)
+        #     Normalize(mean=[0.5071, 0.4866, 0.4409], std=[0.2675, 0.2565, 0.2761]),
         # ])
-        
+        self.preprocess = Compose([
+            Resize((224, 224)),
+            ToTensor(),
+            Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
         print(f'loaded data from {self.data_dir}. dataset size {len(self)}')
 
     def discretize_control(self, control):
@@ -236,7 +173,6 @@ def plot_accuracies(num_epochs, train_accs, val_accs):
 
     plt.show()
 
-
 # Function for setting the seed
 def set_seed(seed):
     random.seed(seed)
@@ -244,15 +180,21 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
+def augment_data():
+    return Compose([
+        RandomResizedCrop((32,32),scale=(0.8,1.0),ratio=(0.9,1.1)),
+        RandomRotation(10)
+    ])
+
+
 def train():
     batch_size = 64
-    num_epochs = 20
+    num_epochs = 5
     num_workers = 2
     num_bins = 5
     set_seed(42)
 
     model = MyModel(num_bins)
-#     model = nn.DataParallel(model.cuda().float())
     model = nn.DataParallel(model.to(gpu_name).float())
 
     train_set = MyDataset(is_train=True, num_bins=num_bins)
@@ -263,9 +205,11 @@ def train():
     validation_loader = torch.utils.data.DataLoader(
         validation_set, batch_size=batch_size, num_workers=num_workers, pin_memory=True, shuffle=False)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=0.01)
+    # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.0001, weight_decay=0.01, momentum=0.9)
+    optimizer = torch.optim.AdamW(params=model.parameters(), lr=0.0005, weight_decay=0.01)
     criterion = nn.CrossEntropyLoss()
     scheduler = ReduceLROnPlateau(optimizer, 'min', patience=1, factor=0.3)
+    augmenter = augment_data()
 
     train_accs = []
     val_accs = []
@@ -279,8 +223,6 @@ def train():
         # train loop
         model.train()
         for i, (image, intention, label) in enumerate(train_loader):
-#             image, intention, label = image.cuda(), intention.cuda(), \
-#                 label.cuda().view(-1)
             image, intention, label = image.to(gpu_name), intention.to(gpu_name), \
                     label.to(gpu_name).view(-1)
 
@@ -303,8 +245,6 @@ def train():
         # validation
         model.eval()
         for i, (image, intention, label) in enumerate(validation_loader):
-#             image, intention, label = image.cuda(), intention.cuda(), \
-#                 label.cuda().view(-1)
             image, intention, label = image.to(gpu_name), intention.to(gpu_name), \
                 label.to(gpu_name).view(-1)
             with torch.no_grad():
@@ -332,11 +272,11 @@ def train():
         # lr scheduler
         scheduler.step(val_loss.avg)
 
-        # checkpoint
-        if epoch % 2 == 1:
-            model_name = 'unet_e'
-            path = 'BehaviourCloning/Checkpoints/' + model_name + str(epoch) + '.pt'
-            torch.save(model.state_dict(), path)
+        # # checkpoint
+        # if epoch % 2 == 1:
+        model_name = 'adam_resnet_e'
+        path = 'BehaviourCloning/Checkpoints/' + model_name + str(epoch) + '.pt'
+        torch.save(model.state_dict(), path)
 
     # Visualize
     plot_accuracies(num_epochs, train_accs, val_accs)
