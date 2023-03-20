@@ -46,8 +46,8 @@ class MyDecisionTreeRegressor:
 
         #########################################################################################
         ### Your code starts here ###############################################################
-        
-
+        x = np.unique(x)
+        thresholds = [float((x[i+1] + x[i])/2) for i in range(0, len(x)-1)]
         ### Your code ends here #################################################################
         #########################################################################################
 
@@ -81,7 +81,17 @@ class MyDecisionTreeRegressor:
             # You should use the calc_thresholds, create_split, and calc_rss_score_split functions.
             # Note that create_split returns the *indices* of samples in the split, while 
             # calc_rss_score_split requires the *response values* (i.e. y) of samples in the split.
-    
+            thresholds = self.calc_thresholds(x)
+
+            for threshold in thresholds:
+                indices_left, indices_right = self.create_split(x, threshold)
+                score = self.calc_rss_score_split(y[indices_left], y[indices_right])
+
+                if score < best_score:
+                    best_score = score
+                    best_threshold = threshold
+                    best_feature_idx = feature_idx
+                    best_split = (indices_left, indices_right)
     
             ### Your code ends here ########################################################
             ################################################################################                      
@@ -115,6 +125,11 @@ class MyDecisionTreeRegressor:
         
         # Please implement the stopping conditions as indicated by self.max_depth and self.min_sample_split.
         # Note that if either variable is None, you should ignore that stopping condition.
+        if (self.max_depth is not None) and (depth >= self.max_depth):
+            return
+        
+        if self.min_samples_split is not None and len(y) < self.min_samples_split:
+            return
         
         ### Your code ends here #################################################################
         #########################################################################################
@@ -193,7 +208,11 @@ class MyRandomForestRegressor:
         ### Your code starts here ###############################################################
         
         # Hint: consider np.random.choice. Bootstrap sampling should be *with replacement*.
+        indices = np.arange(N, dtype=int)
+        samples = np.random.choice(indices, replace=True, size=N)
         
+        y_bootstrap = y[samples]
+        X_bootstrap = X[samples]
         ### Your code ends here #################################################################
         #########################################################################################
 
@@ -209,11 +228,13 @@ class MyRandomForestRegressor:
         ### Your code starts here ###############################################################
         
         # Hint: feature sampling should be *without replacement*.
-        
+        no_features = int(np.ceil(self.max_features * d))
+        indices_sampled = np.random.choice(np.arange(d, dtype=int), replace=False, size=no_features)
+        X_feature_sampled = X[:, indices_sampled]
         ### Your code ends here #################################################################
         #########################################################################################    
 
-        return X_features_sampled, indices_sampled
+        return X_feature_sampled, indices_sampled
     
     
     def fit(self, X, y):
@@ -229,7 +250,11 @@ class MyRandomForestRegressor:
             
             # Use your implementation of MyDecisionTreeRegressor in here, making sure to correctly pass it
             # the values of self.max_depth and self.min_samples_split.
+            X_bootstrap, y_bootstrap = self.bootstrap_sampling(X, y)
+            X_feature_sampled, indices_sampled = self.feature_sampling(X_bootstrap)
             
+            regressor = MyDecisionTreeRegressor(max_depth=self.max_depth, min_samples_split=self.min_samples_split)
+            regressor = regressor.fit(X_feature_sampled, y_bootstrap)
             ### Your code ends here #################################################################
             #########################################################################################    
         
@@ -244,9 +269,14 @@ class MyRandomForestRegressor:
         
         #########################################################################################
         ### Your code starts here ###############################################################
-        
+        result = []
+        for i in range(self.n_estimators):
+            regressor, indices_sampled = self.estimators[i]
+            pred = regressor.predict(X[:, indices_sampled])
+            result.append(pred)
 
-        
+        result = np.array(result)
+        predictions = np.mean(result, axis=0)
         ### Your code ends here #################################################################
         #########################################################################################        
         

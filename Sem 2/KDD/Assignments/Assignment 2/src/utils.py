@@ -22,11 +22,7 @@ def plot_validation_results(param_to_scores):
     plt.xlabel('param')
     plt.ylabel('Cross-Validation Score')
     plt.show()
-    
-    
-    
-    
-    
+        
     
 def plot_scores(param_to_scores):
 
