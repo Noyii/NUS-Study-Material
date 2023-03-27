@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_validation_results(param_to_scores):
+def plot_validation_results(param_to_scores, regressor_name):
 
     plt.figure()
 
@@ -21,10 +21,11 @@ def plot_validation_results(param_to_scores):
     
     plt.xlabel('param')
     plt.ylabel('Cross-Validation Score')
+    plt.title(regressor_name)
     plt.show()
         
     
-def plot_scores(param_to_scores):
+def plot_scores(param_to_scores, regressor_name):
 
     plt.figure()
 
@@ -38,7 +39,9 @@ def plot_scores(param_to_scores):
     # Plot error bar
     plt.plot(sorted(param_to_training_scores.keys()), training_score_mean)
     plt.plot(sorted(param_to_validation_scores.keys()), validation_score_mean)
+    plt.legend(["Training", "Validation"])
     
     plt.xlabel('param')
     plt.ylabel('Cross-Validation Score')
+    plt.title(regressor_name)
     plt.show()    
