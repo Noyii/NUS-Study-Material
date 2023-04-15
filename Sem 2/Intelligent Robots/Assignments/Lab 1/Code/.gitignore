@@ -1,6 +1,0 @@
-*.pyc
-build/
-devel/
-*.npy
-
-.idea/
