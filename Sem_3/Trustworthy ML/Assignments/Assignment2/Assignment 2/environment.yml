@@ -1,0 +1,22 @@
+name: assignment
+channels:
+  - http://conda.anaconda.org/gurobi
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python>=3.7
+  - numpy
+  - scikit-learn>=0.20.4
+  - matplotlib=3.4.3
+  - scikit-image>=0.18.0
+  - imageio
+  - opencv>=4.5.1
+  - torchaudio>=0.9.0
+  - torchvision>=0.8.2
+  - pytorch>=1.7.1
+  - pillow
+  - jupyter
+  - statsmodels
+  - keras>=2.4.3
+  - scipy>=1.4.1
