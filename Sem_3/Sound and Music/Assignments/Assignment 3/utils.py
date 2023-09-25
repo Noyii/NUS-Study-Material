@@ -33,28 +33,23 @@ class PhonemeUtil:
     def get_phonemes(self, word):
         """Returns the phoneme sequence of a word."""
         ''' YOUR CODE HERE '''
-
-        try:
+        if word in self.pronouncing_dict.keys():
             phoneme = self.pronouncing_dict[word][0]
             phoneme = [re.sub(r'\d', '', p) for p in phoneme]
-        except Exception as e:
-            return ['<UNK>']
+        else:
+            phoneme = ['<UNK>']
 
         return phoneme
 
     def word_to_phoneme_sequence(self, sentence):
         """Converts a word sequence to a phoneme sequence."""
         ''' YOUR CODE HERE '''
-        word_list = sentence.lower().split(" ")
-
-        phoneme_list = []
-
-        for word in word_list:
-            phonemes = self.get_phonemes(word)
-            phoneme_list += phonemes
+        words = sentence.lower().split()
+        phonemes = []
+        for word in words:
+            phonemes += self.get_phonemes(word)
             
-
-        return phoneme_list
+        return phonemes
 
 
 class PhonemeTokenizer:
@@ -120,10 +115,7 @@ class PhonemeTokenizer:
         Return a list of numbers. Each representing the corresponding id of that phoneme
         '''
         ''' YOUR CODE HERE '''
-        ids = []
-        for phoneme in seq:
-            ids.append(self.token_to_id[phoneme])
-
+        ids = [self.token_to_id[phoneme] for phoneme in seq]
         return ids
 
     def decode_seq(self, ids):
@@ -132,11 +124,7 @@ class PhonemeTokenizer:
         Return a list of strings. Each string represent the phoneme of that id.
         '''
         ''' YOUR CODE HERE '''
-
-        phonemes = []
-        for id in ids:
-            phonemes.append(self.id_to_token[id])
-
+        phonemes = [self.id_to_token[id] for id in ids]
         return phonemes    
 
     def decode_seq_batch(self, batch_ids):
@@ -144,9 +132,5 @@ class PhonemeTokenizer:
         Apply decode_seq to a batch of phoneme ids
         '''
         ''' YOUR CODE HERE '''
-
-        batch_phonemes = []
-        for ids in batch_ids:
-            batch_phonemes.append(self.decode_seq(ids))
-        
+        batch_phonemes = [self.decode_seq(ids) for ids in batch_ids]
         return batch_phonemes

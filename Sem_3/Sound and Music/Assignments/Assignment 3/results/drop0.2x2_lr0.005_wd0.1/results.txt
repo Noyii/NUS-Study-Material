@@ -1,0 +1,61 @@
+%WER 62.96 [ 34 / 54, 0 ins, 15 del, 19 sub ]
+%SER 100.00 [ 1 / 1 ]
+Scored 1 sentences, 0 not present in hyp.
+================================================================================
+ALIGNMENTS
+
+Format:
+<utterance-id>, WER DETAILS
+<eps> ; reference  ; on ; the ; first ;  line
+  I   ;     S      ; =  ;  =  ;   S   ;   D  
+ and  ; hypothesis ; on ; the ; third ; <eps>
+================================================================================
+61-70970-0040, %WER 62.96 [ 34 / 54, 0 ins, 15 del, 19 sub ]
+DH ; EY ; R ; IY ; G ; EY ; N ;   D   ; DH ; EH ; R ; AH ; P ;   AA  ;   R   ; T ; M  ; AH ; N ;   T   ; AH ; P ; EH ; R ; AH ;   N   ;   T   ;   L   ; IY ; W ;   IH  ; TH ; AW ; T  ;   D   ;   IH  ; S ; T ; ER ; B ; IH ; NG ;   DH  ;   AH  ;   HH  ; AW ; S ; HH ;   OW  ; L ; D ; AH ; V ; <UNK>
+=  ; S  ; = ; =  ; S ; =  ; = ;   D   ; =  ; S  ; S ; S  ; S ;   D   ;   D   ; = ; S  ; =  ; S ;   D   ; =  ; = ; S  ; S ; S  ;   D   ;   D   ;   D   ; =  ; S ;   D   ; =  ; S  ; S  ;   D   ;   D   ; = ; = ; =  ; S ; =  ; S  ;   D   ;   D   ;   D   ; =  ; = ; S  ;   D   ; = ; = ; S  ; S ;   D  
+DH ; IH ; R ; IY ; P ; EY ; N ; <eps> ; DH ; IH ; T ; K  ; L ; <eps> ; <eps> ; T ; ER ; AH ; D ; <eps> ; AH ; P ; ER ; W ; IH ; <eps> ; <eps> ; <eps> ; IY ; M ; <eps> ; TH ; P  ; AH ; <eps> ; <eps> ; S ; T ; ER ; P ; IH ; N  ; <eps> ; <eps> ; <eps> ; AW ; S ; AH ; <eps> ; L ; D ; EH ; L ; <eps>
+================================================================================
+61-70970-0017, %WER 28.00 [ 7 / 25, 0 ins, 5 del, 2 sub ]
+R ; EH ; S ; T ; AH ; N ;   D   ; B ; IY ; S ; T ; IH ;   L   ; AH ; N ; T ;   IH  ; L ; AY ;   W   ; AO ; R ; N ;   Y   ; UW
+= ; =  ; = ; = ; =  ; = ;   D   ; = ; =  ; = ; = ; S  ;   D   ; =  ; = ; = ;   D   ; = ; S  ;   D   ; =  ; = ; = ;   D   ; = 
+R ; EH ; S ; T ; AH ; N ; <eps> ; B ; IY ; S ; T ; OW ; <eps> ; AH ; N ; T ; <eps> ; L ; AH ; <eps> ; AO ; R ; N ; <eps> ; UW
+================================================================================
+61-70970-0001, %WER 62.69 [ 42 / 67, 2 ins, 19 del, 21 sub ]
+DH ; EH ; R ; B ;   IH  ; F ; EH ; L ; AE ; N  ; AE ; NG ;   K   ; SH ;   AH  ; S ; IH ;   N   ; T ; ER ;   V   ;   Y   ; UW ;   M   ; IH ;   S   ; T ; R  ; AH ; S ; <UNK> ;   AA  ;   R   ;   G   ;   Y   ; UW ; IH ; NG ; <eps> ; F ; AO ; R ;   AH  ; N ;   D   ; AH ; G ; EH ; N ; S ; T ;   DH  ; AH ; <UNK> ; P  ; R ;   AA  ;   JH  ;   EH  ; K ; T ; IH ; N ; AH ; B  ; R  ; EH ; <eps> ; TH
+=  ; S  ; = ; = ;   D   ; = ; S  ; = ; S  ; S  ; =  ; S  ;   D   ; =  ;   D   ; = ; S  ;   D   ; = ; =  ;   D   ;   D   ; =  ;   D   ; =  ;   D   ; = ; S  ; S  ; S ;   D   ;   D   ;   D   ;   D   ;   D   ; =  ; =  ; S  ;   I   ; = ; S  ; = ;   D   ; = ;   D   ; =  ; S ; S  ; = ; S ; = ;   D   ; =  ;   S   ; S  ; = ;   D   ;   D   ;   D   ; = ; = ; S  ; S ; =  ; S  ; S  ; S  ;   I   ; = 
+DH ; IH ; R ; B ; <eps> ; F ; AH ; L ; AH ; TH ; AE ; N  ; <eps> ; SH ; <eps> ; S ; EH ; <eps> ; T ; ER ; <eps> ; <eps> ; UW ; <eps> ; IH ; <eps> ; T ; UW ; UW ; T ; <eps> ; <eps> ; <eps> ; <eps> ; <eps> ; UW ; IH ; N  ;   K   ; F ; L  ; R ; <eps> ; N ; <eps> ; AH ; K ; IH ; N ; T ; T ; <eps> ; AH ;   F   ; AO ; R ; <eps> ; <eps> ; <eps> ; K ; T ; AH ; P ; AH ; NG ; AH ; P  ;   R   ; TH
+================================================================================
+61-70970-0021, %WER 63.33 [ 38 / 60, 2 ins, 22 del, 14 sub ]
+DH ; EY ; DH ; EH ; N ; R ; IH ;   N   ; UW ;   D   ; DH ; EH ; R ; JH ; ER ; N ;   IY  ;   AH  ;   N   ; D ; <eps> ; AH ; N ;   D   ;   ER  ; DH ; AH ; B ; EH ; T ; ER ;   L   ; AY ; <eps> ; T ;   M   ;   EY  ;   D   ; AH ; S ;   EY  ;   F   ; K ; R  ;   AO  ; S ;   IH  ;   NG  ; AH ;   V   ;   DH  ;   AH  ; S ; T ; EY ; B ; AH ; L ;   R   ;   UW  ;   F   ; S
+=  ; S  ; =  ; S  ; S ; = ; =  ;   D   ; =  ;   D   ; =  ; S  ; S ; S  ; =  ; = ;   D   ;   D   ;   D   ; = ;   I   ; =  ; S ;   D   ;   D   ; =  ; =  ; = ; S  ; S ; S  ;   D   ; =  ;   I   ; = ;   D   ;   D   ;   D   ; =  ; = ;   D   ;   D   ; = ; S  ;   D   ; = ;   D   ;   D   ; =  ;   D   ;   D   ;   D   ; = ; = ; S  ; S ; S  ; = ;   D   ;   D   ;   D   ; =
+DH ; V  ; DH ; AE ; T ; R ; IH ; <eps> ; UW ; <eps> ; DH ; ER ; T ; UW ; ER ; N ; <eps> ; <eps> ; <eps> ; D ;   EY  ; AH ; T ; <eps> ; <eps> ; DH ; AH ; B ; AY ; R ; W  ; <eps> ; AY ;   IH  ; T ; <eps> ; <eps> ; <eps> ; AH ; S ; <eps> ; <eps> ; K ; AH ; <eps> ; S ; <eps> ; <eps> ; AH ; <eps> ; <eps> ; <eps> ; S ; T ; UW ; T ; OW ; L ; <eps> ; <eps> ; <eps> ; S
+================================================================================
+61-70970-0037, %WER 62.12 [ 41 / 66, 2 ins, 18 del, 21 sub ]
+  HH  ; IH ; Z ; T ;   OW  ; N ; Z ; R ; AE ; NG ; P  ; L ; EH ; Z ; AH ; N  ; T ; L ; IY ; AA ;   N   ; <UNK> ;   IH  ;   R   ; Z ;   AH  ; N ; D  ; <eps> ; F ;   AO  ; R ;   TH  ; W ; IH ; TH ; <eps> ; AH ; G ;   UH  ;   D   ; F ;   EH  ; L ;   OW  ; SH ; IH ; P ; W ;   AA  ; Z ; HH ; EH ;   R   ;   AH  ; L ;   D   ; IH ;   D   ; B ; IH ; T ; W ; IY ; N ; DH ; EH ; M
+  D   ; =  ; = ; = ;   D   ; = ; S ; = ; S  ; S  ; S  ; = ; S  ; S ; S  ; S  ; = ; S ; =  ; S  ;   D   ;   D   ;   D   ;   D   ; = ;   D   ; = ; S  ;   I   ; = ;   D   ; = ;   D   ; = ; =  ; S  ;   I   ; =  ; S ;   D   ;   D   ; = ;   D   ; = ;   D   ; =  ; S  ; S ; = ;   D   ; = ; =  ; S  ;   D   ;   D   ; = ;   D   ; =  ;   D   ; = ; =  ; S ; S ; =  ; S ; S  ; S  ; =
+<eps> ; IH ; Z ; T ; <eps> ; N ; D ; R ; K  ; Z  ; AH ; L ; AH ; L ; T  ; IH ; T ; S ; IY ; ER ; <eps> ; <eps> ; <eps> ; <eps> ; Z ; <eps> ; N ; DH ;   AH  ; F ; <eps> ; R ; <eps> ; W ; IH ; V  ;   DH  ; AH ; B ; <eps> ; <eps> ; F ; <eps> ; L ; <eps> ; SH ; AH ; B ; W ; <eps> ; Z ; HH ; ER ; <eps> ; <eps> ; L ; <eps> ; IH ; <eps> ; B ; IH ; K ; R ; IY ; M ; AH ; N  ; M
+================================================================================
+61-70970-0036, %WER 67.11 [ 51 / 76, 7 ins, 19 del, 25 sub ]
+R ; AA ; B  ; <eps> ; AH ; N ; <UNK> ; <eps> ; S ; AO ; DH ; AE ; T  ; HH ; IH ; <eps> ; <eps> ; Z ; D ; AW ;   T   ;   S   ; AH ; V ; <eps> ; W ; AA ; R ;   AH  ;   N   ; T ; AH ; N ;   HH  ; AE ; D ; B ; IH ; N ; AH ; N ; F ; EH ; R ; <eps> ; AH ; N ;   D   ;   HH  ; IY ; B ;   IH  ; K ; EY ; M ;   AH  ; SH ; EY ; M ; D ; <eps> ; AH ; V ;   HH  ;   IH  ;   M   ; S ; EH ; L ; F ; F ;   AO  ;   R   ; HH ; AA ; R ; B ; ER ;   IH  ;   NG  ;   DH  ;   EH  ;   M  
+S ; S  ; S  ;   I   ; =  ; = ;   S   ;   I   ; = ; S  ; S  ; S  ; S  ; S  ; =  ;   I   ;   I   ; = ; = ; S  ;   D   ;   D   ; =  ; S ;   I   ; = ; S  ; = ;   D   ;   D   ; = ; S  ; = ;   D   ; =  ; S ; = ; S  ; = ; S  ; = ; = ; =  ; = ;   I   ; =  ; = ;   D   ;   D   ; =  ; = ;   D   ; = ; =  ; S ;   D   ; =  ; =  ; S ; = ;   I   ; =  ; S ;   D   ;   D   ;   D   ; = ; S  ; = ; = ; S ;   D   ;   D   ; =  ; S  ; S ; S ; S  ;   D   ;   D   ;   D   ;   D   ;   D  
+W ; EH ; AH ;   P   ; AH ; N ;   F   ;   UW  ; S ; N  ; UW ; S  ; AO ; L  ; IH ;   HH  ;   UW  ; Z ; D ; EH ; <eps> ; <eps> ; AH ; L ;   T   ; W ; AO ; R ; <eps> ; <eps> ; T ; UW ; N ; <eps> ; AE ; T ; B ; AH ; N ; AO ; N ; F ; EH ; R ;   DH  ; AH ; N ; <eps> ; <eps> ; IY ; B ; <eps> ; K ; EY ; W ; <eps> ; SH ; EY ; N ; D ;   F   ; AH ; N ; <eps> ; <eps> ; <eps> ; S ; AH ; L ; F ; L ; <eps> ; <eps> ; HH ; L  ; P ; L ; AH ; <eps> ; <eps> ; <eps> ; <eps> ; <eps>
+================================================================================
+61-70970-0020, %WER 54.76 [ 23 / 42, 1 ins, 13 del, 9 sub ]
+<eps> ; W ;   IH  ; L ; W ; IH ; S ; P ; ER ; D ; R ;   AA  ; B ; AH ; N ; OW ; P ;   AH  ;   N   ; IH ;   NG  ;   HH  ; IH ; Z ; D ; AO ; R ; AE ; Z  ;   HH  ;   IY  ; S ;   P   ; OW ; K ; AA ; R ;   Y   ;   UW  ;   R   ; EH ; D ;   IY 
+  I   ; = ;   D   ; = ; = ; =  ; S ; S ; =  ; S ; = ;   D   ; = ; =  ; = ; =  ; = ;   D   ;   D   ; =  ;   D   ;   D   ; =  ; = ; S ; S  ; = ; S  ; S  ;   D   ;   D   ; = ;   D   ; =  ; = ; S  ; = ;   D   ;   D   ;   D   ; =  ; S ;   D  
+  N   ; W ; <eps> ; L ; W ; IH ; Z ; B ; ER ; K ; R ; <eps> ; B ; AH ; N ; OW ; P ; <eps> ; <eps> ; IH ; <eps> ; <eps> ; IH ; Z ; T ; AH ; R ; S  ; IH ; <eps> ; <eps> ; S ; <eps> ; OW ; K ; G  ; R ; <eps> ; <eps> ; <eps> ; EH ; T ; <eps>
+================================================================================
+61-70970-0000, %WER 56.16 [ 41 / 73, 2 ins, 18 del, 21 sub ]
+Y  ; AH ; NG ; <UNK> ; HH ; AE ; D ; B ; IH ; N ; K  ; AH ; M ; AE ; N ; D ; AH ;   D   ; T ; UW ; HH ; IH ; Z ;   M   ; AH ; DH ; <eps> ; ER ; Z ; CH ; EY ;   M   ; B ; ER ; S  ; OW ; S ; UW ; N  ;   AE  ; Z ; HH ;   IY  ;   HH  ;   AE  ;   D   ; K ; AH ; M ; AW ;   T   ; F ;   R   ;   AH  ;   M   ;   HH  ; IH ; Z ; K  ; AA ;   N   ; V ; ER ; S ; W ; IH ; DH ;   DH  ;   AH  ;   S   ;   K   ; W ; AY ; R ; <eps>
+S  ; S  ; S  ;   S   ; S  ; S  ; = ; = ; S  ; = ; S  ; =  ; S ; =  ; = ; = ; =  ;   D   ; = ; =  ; S  ; =  ; = ;   D   ; =  ; =  ;   I   ; =  ; S ; =  ; =  ;   D   ; = ; =  ; S  ; S  ; = ; S  ; S  ;   D   ; = ; =  ;   D   ;   D   ;   D   ;   D   ; = ; =  ; S ; =  ;   D   ; = ;   D   ;   D   ;   D   ;   D   ; =  ; = ; S  ; S  ;   D   ; = ; =  ; S ; = ; =  ; S  ;   D   ;   D   ;   D   ;   D   ; = ; S  ; = ;   I  
+IY ; F  ; IH ;   K   ; TH ; AH ; D ; B ; AH ; N ; TH ; AH ; N ; AE ; N ; D ; AH ; <eps> ; T ; UW ; M  ; IH ; Z ; <eps> ; AH ; DH ;   AH  ; ER ; K ; CH ; EY ; <eps> ; B ; ER ; SH ; AH ; S ; R  ; AA ; <eps> ; Z ; HH ; <eps> ; <eps> ; <eps> ; <eps> ; K ; AH ; N ; AW ; <eps> ; F ; <eps> ; <eps> ; <eps> ; <eps> ; IH ; Z ; AO ; L  ; <eps> ; V ; ER ; T ; W ; IH ; Z  ; <eps> ; <eps> ; <eps> ; <eps> ; W ; AO ; R ;   T  
+================================================================================
+61-70970-0016, %WER 53.85 [ 28 / 52, 2 ins, 17 del, 9 sub ]
+W ;   IY  ;   W   ; IH ; <eps> ; L ; G  ;   OW  ;   AW  ; T ; T ; AH ; G  ;   EH  ; DH ; ER ; T ; UW ; DH ; AH ; B ; AW ;   ER  ; DH ;   EH  ; R ;   IH  ; Z ; AH ; W ;   EY  ; D ; AW ; N ; T ; UW ;   DH  ; AH ; K ; AO ; R ; <eps> ; T ; F ;   R   ; AH ; M ;   M   ;   AY  ;   W   ; IH ;   N   ;   D   ;   OW 
+= ;   D   ;   D   ; =  ;   I   ; = ; S  ;   D   ;   D   ; = ; S ; S  ; S  ;   D   ; =  ; =  ; S ; =  ; =  ; =  ; = ; =  ;   D   ; =  ;   D   ; = ;   D   ; = ; =  ; = ;   D   ; = ; =  ; = ; = ; S  ;   D   ; =  ; S ; =  ; = ;   I   ; = ; S ;   D   ; =  ; S ;   D   ;   D   ;   D   ; =  ;   D   ;   D   ;   D  
+W ; <eps> ; <eps> ; IH ;   D   ; L ; AH ; <eps> ; <eps> ; T ; D ; UW ; IH ; <eps> ; DH ; ER ; K ; UW ; DH ; AH ; B ; AW ; <eps> ; DH ; <eps> ; R ; <eps> ; Z ; AH ; W ; <eps> ; D ; AW ; N ; T ; T  ; <eps> ; AH ; P ; AO ; R ;   K   ; T ; W ; <eps> ; AH ; N ; <eps> ; <eps> ; <eps> ; IH ; <eps> ; <eps> ; <eps>
+================================================================================
+61-70970-0027, %WER 64.41 [ 38 / 59, 0 ins, 21 del, 17 sub ]
+R ;   AA  ;   B   ; AH ; N ; K  ;   EH  ;   R   ; F ;   AH  ; L ; IY ; D ; IH ; S ; EH ; N ;   D   ;   AH  ;   D   ;   DH  ;   AH  ; L ;   AE  ; D ; ER ; AH ; N ;   D   ; F ; AW ; N ; D  ; HH ;   IH  ;   M   ; S ; EH ; L ;   F   ; S ; UW ; N ; AH ; P ; AA ; N ; F ; ER ; M ;   R   ;   AA  ;   K   ; IY ; G ;   R   ;   AW  ; N ;   D  
+S ;   D   ;   D   ; =  ; S ; S  ;   D   ;   D   ; = ;   D   ; = ; =  ; = ; S  ; = ; =  ; S ;   D   ;   D   ;   D   ;   D   ;   D   ; = ;   D   ; = ; S  ; S  ; = ;   D   ; = ; S  ; S ; S  ; S  ;   D   ;   D   ; = ; S  ; = ;   D   ; = ; S  ; S ; =  ; = ; S  ; = ; = ; S  ; S ;   D   ;   D   ;   D   ; =  ; = ;   D   ;   D   ; = ;   D  
+W ; <eps> ; <eps> ; AH ; T ; ER ; <eps> ; <eps> ; F ; <eps> ; L ; IY ; D ; AH ; S ; EH ; T ; <eps> ; <eps> ; <eps> ; <eps> ; <eps> ; L ; <eps> ; D ; AY ; IH ; N ; <eps> ; F ; AA ; T ; AH ; N  ; <eps> ; <eps> ; S ; OW ; L ; <eps> ; S ; IY ; D ; AH ; P ; AO ; N ; F ; AH ; P ; <eps> ; <eps> ; <eps> ; IY ; G ; <eps> ; <eps> ; N ; <eps>
