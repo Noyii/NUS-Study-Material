@@ -1,0 +1,6 @@
+data/
+kaggle.json
+.mypy_cache/
+.vscode/
+__pycache__/
+.ipynb_checkpoints/
