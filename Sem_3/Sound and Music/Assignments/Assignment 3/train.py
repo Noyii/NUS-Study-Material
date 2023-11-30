@@ -15,9 +15,7 @@ from hyperpyyaml import load_hyperpyyaml
 from utils import *
 import torch
 from speechbrain.utils.checkpoints import Checkpointer
-from speechbrain.utils.metric_stats import ErrorRateStats
-
-
+from speechbrain.nnet.schedulers import NewBobScheduler, update_learning_rate
 
 def main(device="cpu"):
     experiment_dir = pathlib.Path(__file__).resolve().parent
@@ -62,13 +60,7 @@ def main(device="cpu"):
 
     # Evaluation is run separately (now just evaluating on valid data)
     # ctc_brain.evaluate(valid_data, min_key='PER')
-    ### Evaluation on test data
     ctc_brain.evaluate(test_data, min_key='PER')
-
-
-
-    
-
 
 def data_prep(data_folder, hparams):
     "Creates the datasets and their data processing pipelines."
@@ -123,6 +115,9 @@ class CTCBrain(sb.Brain):
     def on_fit_start(self):
         super().on_fit_start()  # resume ckpt
         self.tokenizer = PhonemeTokenizer()
+        self.scheduler = NewBobScheduler(
+            initial_value=self.hparams.lr,
+        )
 
     def compute_forward(self, batch, stage):
         "Given an input batch it computes the output probabilities."
@@ -156,10 +151,14 @@ class CTCBrain(sb.Brain):
             else:
                 self.per_metrics.append(batch.id, out, tgt)
 
+
         return loss
 
     def on_stage_start(self, stage, epoch=None):
         "Gets called when a stage (either training, validation, test) starts."
+        if stage == sb.Stage.TRAIN:
+            print(f"Epoch: {epoch}, Train LR: {self.optimizer.param_groups[0]['lr']}")
+
         if stage != sb.Stage.TRAIN:
             self.per_metrics = self.hparams.per_stats()
         
@@ -169,7 +168,7 @@ class CTCBrain(sb.Brain):
     def on_stage_end(self, stage, stage_loss, epoch=None):
         """Gets called at the end of a stage."""
         PER = None
-
+        
         if stage == sb.Stage.TRAIN:
             self.train_loss = stage_loss
 
@@ -180,6 +179,9 @@ class CTCBrain(sb.Brain):
             print(stage, "loss: %.2f" % stage_loss)
             print(stage, "PER: %.2f" % PER)
 
+            _, new_lr = self.scheduler(metric_value=stage_loss)
+            update_learning_rate(self.optimizer, new_lr)
+
             self.checkpointer.save_and_keep_only(meta={"PER": PER}, min_keys=["PER"], keep_recent=False)
 
         elif stage == sb.Stage.TEST:
@@ -187,11 +189,11 @@ class CTCBrain(sb.Brain):
             print(stage, "loss: %.2f" % stage_loss)
             print(stage, "PER: %.2f" % PER)
         
-        self.save_logs(stage, PER, stage_loss)
+        self.save_logs(stage, PER, stage_loss, self.optimizer.param_groups[0]['lr'])
     
-    def save_logs(self, stage, PER, stage_loss):
-        with open(f"./results/baseline/logs/{stage}.txt", "a") as w:
-            w.write(f"PER: {PER} \n Loss: {stage_loss}")
+    def save_logs(self, stage, PER, stage_loss, lr):
+        with open(f"./{self.hparams.output_dir}/logs/{stage}.txt", "a") as w:
+            w.write(f"PER: {PER} \t Loss: {stage_loss} \t lr: {lr}\n")
 
 
 if __name__ == "__main__":
